@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+ENV/
+
+# Database
+instance/
+*.db
+Instance/
+
+# IDEs
+.vscode/
+.idea/
+
+# System
+Thumbs.db
+Desktop.ini
+
+# Project Specific
+.gemini/
+.agents/
+.agent/
+brain/
+*.log
