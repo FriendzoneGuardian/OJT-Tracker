@@ -21,7 +21,7 @@ def build():
         "--add-data", "templates;templates",
         "--add-data", "static;static",
         "--add-data", "Docs;Docs",
-        "--name", "FriendzoneGuardian-OJT-Tracker-v1.1.0",
+        "--name", "FriendzoneGuardian-OJT-Tracker-v1.2.0",
         "app.py"
     ]
     
