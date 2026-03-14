@@ -19,7 +19,7 @@ The "Expected End" calculation isn't a simple division. It's a "simulated walk" 
 We use a 7-item limit for the Holiday list. This was a design choice to prevent long-scrolling modals and keep the "Add Entry" form always visible on the left side of the 70% width modal.
 
 ## 📈 Current State & Debt
-- **v1.1.0**: Stable, portable, and git-mounted.
+- **v1.2.3**: Current stable version. Portable, git-mounted, with full Wiki documentation.
 - **Known Quirks**: Matplotlib generates charts on the server and sends them as Base64. This is for portability (no need for complex JS charting libs), but it means charts are static until the next fetch.
 - **Future Growth**: Looking into multi-user support or cloud-sync, though the current "Offline First" philosophy is a core feature.
 
