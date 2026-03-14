@@ -27,6 +27,13 @@ This document tracks the progress of the OJT-Tracker development.
 - [x] Build `bundle_app.py` for standalone EXE creation
 - [x] Create one-click `run.bat` launcher
 
+### Phase 6: Weekend Toggle Implementation [COMPLETED]
+- [x] Add `include_saturday/sunday` to `Settings` model
+- [x] Update `app.py` trajectory logic
+- [x] Add toggles to Settings UI
+- [x] Update README with `venv` activation steps
+- [x] Final Git Push
+
 ### Phase 5: Documentation Migration [IN PROGRESS]
 - [x] Create project `Docs/` directory
 - [x] Migrated `implementation_plan.md`

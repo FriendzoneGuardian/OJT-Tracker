@@ -23,6 +23,12 @@ The Holiday Tracker is a dedicated system for managing non-working days:
 - **Relative Storage**: Data is stored in a `data/` folder relative to the execution path.
 - **Standalone Build**: Support for PyInstaller bundling into a single Windows EXE.
 
-## Verification Workflow
+### 🛠️ Weekend Logic Toggles
+- **Backend**: Add `include_saturday` and `include_sunday` (Boolean) to the `Settings` model.
+- **Trajectory Calculation**: Update `get_stats` logic in `app.py` to check these settings instead of hardcoding a weekend skip.
+- **Frontend**: Add two toggle switches (Saturdays/Sundays) to the Settings modal.
+
+## Verification Plan
+Workflow
 - **Automated**: Browser-based testing for modal interactions and pagination.
 - **Manual**: Trajectory accuracy checks and database persistence verification.

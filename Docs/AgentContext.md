@@ -11,7 +11,9 @@ The OJT-Tracker was born out of a need to accurately predict internship completi
 We moved away from instance folders to a root `data/` folder to support "On Wheels" (portable) deployment. This allows IT staff to move the app across machines without reconfiguring environment variables.
 
 ### 2. The Iterative Projection Model
-The "Expected End" calculation isn't a simple division. It's a "simulated walk" through the calendar. It starts at `today` and steps forward day-by-day, skipping non-working days until the target hours are met. This is computationally slightly more expensive but infinitely more accurate.
+The "Expected End" calculation isn't a simple division. It's a "simulated walk" through the calendar. It starts at `today` and steps forward day-by-day, skipping non-working days until the target hours are met. 
+- **Configuration**: Since v1.1.1, Saturdays and Sundays can be toggled as working days via the Settings modal.
+- **Accuracy**: This approach is computationally slightly more expensive but infinitely more accurate.
 
 ### 3. Client-Side Pagination
 We use a 7-item limit for the Holiday list. This was a design choice to prevent long-scrolling modals and keep the "Add Entry" form always visible on the left side of the 70% width modal.

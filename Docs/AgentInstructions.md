@@ -11,7 +11,7 @@ Welcome, fellow Agent! This document contains specific instructions for AI codin
 ## 📏 Coding Standards
 1.  **Versioning**: Always reference the `VERSION` constant in `app.py`. If you update features, increment the version (Semantic Versioning).
 2.  **Trajectory Logic**: The core value-prop is the "Expected End" date. If you modify how hours are calculated, ensure you account for:
-    -   Weekends (Sat/Sun)
+    -   User-defined working days (Saturdays/Sundays are toggleable in Settings)
     -   National Holidays (from `Holiday` model)
     -   User Exclusions (from `ExcludedDate` model)
 3.  **Portability**: Never hardcode absolute paths. Use `os.path.join(BASE_DIR, ...)` to ensure it runs "On Wheels".

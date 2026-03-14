@@ -149,6 +149,24 @@
                         <label class="block text-xs text-gray-500 uppercase mb-2">Target OJT Hours</label>
                         <input type="number" id="target_hours" step="0.5" required class="w-full bg-black/5 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-scarlet-500 transition-all tab-able">
                     </div>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <div class="relative">
+                                <input type="checkbox" id="include_saturday" class="sr-only peer">
+                                <div class="w-10 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:bg-scarlet-600 transition-all"></div>
+                                <div class="absolute left-1 top-1 w-4 h-4 bg-gray-400 rounded-full transition-all peer-checked:translate-x-4 peer-checked:bg-white"></div>
+                            </div>
+                            <span class="text-xs text-gray-400 group-hover:text-white transition-colors">Include Sats</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <div class="relative">
+                                <input type="checkbox" id="include_sunday" class="sr-only peer">
+                                <div class="w-10 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:bg-scarlet-600 transition-all"></div>
+                                <div class="absolute left-1 top-1 w-4 h-4 bg-gray-400 rounded-full transition-all peer-checked:translate-x-4 peer-checked:bg-white"></div>
+                            </div>
+                            <span class="text-xs text-gray-400 group-hover:text-white transition-colors">Include Suns</span>
+                        </label>
+                    </div>
                     <button type="submit" class="w-full py-4 bg-scarlet-600 hover:bg-scarlet-700 text-white rounded-2xl font-bold mt-4 transition-all shadow-lg shadow-scarlet-600/20">Save Settings</button>
                 </form>
             </div>
@@ -369,7 +387,11 @@
 
         document.getElementById('settings-form').onsubmit = async (e) => {
             e.preventDefault();
-            const data = { target_hours: document.getElementById('target_hours').value };
+            const data = { 
+                target_hours: document.getElementById('target_hours').value,
+                include_saturday: document.getElementById('include_saturday').checked,
+                include_sunday: document.getElementById('include_sunday').checked
+            };
             await fetch('/api/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -486,6 +508,8 @@
                 const res = await fetch('/api/settings');
                 const data = await res.json();
                 document.getElementById('target_hours').value = data.target_hours;
+                document.getElementById('include_saturday').checked = data.include_saturday;
+                document.getElementById('include_sunday').checked = data.include_sunday;
             }
         }
 

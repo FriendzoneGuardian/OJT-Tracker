@@ -24,15 +24,17 @@ db = SQLAlchemy(app)
 class Settings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     target_hours = db.Column(db.Float, default=486.0)
+    include_saturday = db.Column(db.Boolean, default=False)
+    include_sunday = db.Column(db.Boolean, default=False)
 
     @classmethod
-    def get_target(cls):
+    def get_settings_obj(cls):
         setting = cls.query.first()
         if not setting:
-            setting = cls(target_hours=486.0)
+            setting = cls(target_hours=486.0, include_saturday=False, include_sunday=False)
             db.session.add(setting)
             db.session.commit()
-        return setting.target_hours
+        return setting
 
 class Holiday(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -155,7 +157,8 @@ def delete_entry(entry_id):
 @app.route('/api/stats')
 def get_stats():
     total_rendered = db.session.query(db.func.sum(OJTEntry.total_hours)).scalar() or 0
-    target_hours = Settings.get_target()
+    settings = Settings.get_settings_obj()
+    target_hours = settings.target_hours
     left = max(0, target_hours - total_rendered)
     
     # Precise Trajectory Analysis
@@ -184,7 +187,13 @@ def get_stats():
                 day_count += 1
                 
                 # Check for weekends (5 = Saturday, 6 = Sunday)
-                if curr_date.weekday() >= 5:
+                is_working_weekend = False
+                if curr_date.weekday() == 5 and settings.include_saturday:
+                    is_working_weekend = True
+                if curr_date.weekday() == 6 and settings.include_sunday:
+                    is_working_weekend = True
+
+                if curr_date.weekday() >= 5 and not is_working_weekend:
                     continue
                 
                 # Check for specific non-working dates
@@ -219,20 +228,20 @@ def get_stats():
 
 @app.route('/api/settings', methods=['GET', 'POST'])
 def handle_settings():
-    setting = Settings.query.first()
-    if not setting:
-        setting = Settings(target_hours=486.0)
-        db.session.add(setting)
-        db.session.commit()
+    setting = Settings.get_settings_obj()
     
     if request.method == 'POST':
         data = request.json
-        setting.target_hours = float(data.get('target_hours', 486.0))
+        setting.target_hours = float(data.get('target_hours', setting.target_hours))
+        setting.include_saturday = bool(data.get('include_saturday', False))
+        setting.include_sunday = bool(data.get('include_sunday', False))
         db.session.commit()
     
-    return jsonify({'target_hours': setting.target_hours})
-
-    return jsonify({'target_hours': setting.target_hours})
+    return jsonify({
+        'target_hours': setting.target_hours,
+        'include_saturday': setting.include_saturday,
+        'include_sunday': setting.include_sunday
+    })
 
 @app.route('/api/holidays', methods=['GET', 'POST'])
 def handle_holidays():

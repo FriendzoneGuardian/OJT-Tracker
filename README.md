@@ -1,6 +1,6 @@
 # 🕰️ OJT-Tracker v1.1.0
 
-Welcome to the **OJT-Tracker**, the only app that understands that *time flies when you're having fun*, but it *crawls when you're rendering 486 hours*.
+Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 486 hours_.
 
 If you're looking for a way to track your internship hours without losing your mind, you've come to the **right place at the right time**.
 
@@ -23,12 +23,21 @@ Because manually calculating hours is a **second-rate** experience. We're here t
 ## 🛠️ Installation (It's about time you did this)
 
 1. **Clone the repo**: (Don't worry, we won't tell the original owner).
-2. **Install dependencies**: `pip install -r requirements.txt` (This takes a **moment**, but it's worth the **wait**).
-3. **Run the app**: `python app.py` (And watch the magic happen).
-4. **Read the Docs**: Check out our new [Docs/](Docs/) folder for technical details!
-5. **For Vibecoders**: If you're an AI agent, read our [Agent Instructions](Docs/AgentInstructions.md) and [Agent Context](Docs/AgentContext.md).
+2. **Setup Virtual Environment**: _(Optional)_
+   ```bash
+   python -m venv venv
+   # Windows:
+   venv\Scripts\activate
+   # Mac/Linux:
+   source venv/bin/activate
+   ```
+3. **Install dependencies**: `pip install -r requirements.txt` (This takes a **moment**, but it's worth the **wait**).
+4. **Run the app**: `python app.py` (And watch the magic happen).
+5. **Read the Docs**: Check out our new [Docs/](Docs/) folder for technical details!
+6. **For Vibecoders**: If you're an AI agent, read our [Agent Instructions](Docs/AgentInstructions.md) and [Agent Context](Docs/AgentContext.md).
 
 ## 🤝 Project Support
+
 Brought to you by **FriendzoneGuardian**. We're here to make sure your OJT journey is **smooth sailing** (or at least better than a leaky canoe).
 
 ## 💡 Pro-Tip
@@ -43,4 +52,4 @@ This project is licensed under the **"Grandfather Clock"** License: If you use i
 
 ---
 
-*OJT-Tracker: Helping you track your hours so you don't end up **out of time**.*
+_OJT-Tracker: Helping you track your hours so you don't end up **out of time**._
