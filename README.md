@@ -1,4 +1,4 @@
-# 🕰️ OJT-Tracker v1.2.0
+# 🕰️ OJT-Tracker v1.2.1
 
 Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 486 hours_.
 
