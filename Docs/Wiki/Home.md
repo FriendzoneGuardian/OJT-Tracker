@@ -12,6 +12,7 @@ The **OJT-Tracker** (by FriendzoneGuardian) is a premium, high-performance tool 
 - [📖 User Guide](User-Guide.md): Master the interface and tracking logic.
 - [🛞 Deployment Guide](Deployment-Guide.md): Technical steps for "On Wheels" setup.
 - [🛠️ Technical Reference](Technical-Reference.md): For the Vibecoders and AI Agents (Agent-Friendly!).
+- [🍳 Kitchen Nightmares Guide](Kitchen-Nightmares.md): **READ THIS IF YOU ARE A DOUGHNUT** (Gordon Ramsay Edition).
 
 ## ⚡ Quick Resume
 Already installed? Here is how to get back into the flow:
@@ -20,4 +21,4 @@ Already installed? Here is how to get back into the flow:
 - **Lazy Mode**: Double-click `run.bat`.
 
 ---
-*Version: 1.2.3 | [FriendzoneGuardian](https://github.com/FriendzoneGuardian)*
+*Version: 1.2.4 | [FriendzoneGuardian](https://github.com/FriendzoneGuardian)*

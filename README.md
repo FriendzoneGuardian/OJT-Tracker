@@ -1,4 +1,4 @@
-# 🕰️ OJT-Tracker v1.2.3
+# 🕰️ OJT-Tracker v1.2.4
 
 Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 486 hours_.
 
@@ -44,6 +44,7 @@ Because manually calculating hours is a **second-rate** experience. We're here t
 4. **Install dependencies**: `pip install -r requirements.txt` (This takes a **moment**, but it's worth the **wait**).
 5. **Run the app**: `python app.py` (And watch the magic happen).
 5. **Read the Docs & Wiki**: Check out our [GitHub Wiki](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki) or the [Docs/](Docs/) folder for technical details!
+6. **Kitchen Nightmares**: [READ THE GORDON RAMSAY INSTALL GUIDE](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Kitchen-Nightmares) (For the Doughnuts).
 
 ## ⚡ Quick Start (Re-running the app)
 If you've already installed the app and just want to start it again:
