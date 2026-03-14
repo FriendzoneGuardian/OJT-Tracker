@@ -1,4 +1,4 @@
-# 🕰️ OJT-Tracker v1.1.0
+# 🕰️ OJT-Tracker v1.2.0
 
 Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 486 hours_.
 
@@ -22,8 +22,11 @@ Because manually calculating hours is a **second-rate** experience. We're here t
 
 ## 🛠️ Installation (It's about time you did this)
 
-1. **Clone the repo**: (Don't worry, we won't tell the original owner).
-2. **Setup Virtual Environment**: _(Optional)_
+1. **Clone the repo**:
+   ```bash
+   git clone https://github.com/FriendzoneGuardian/OJT-Tracker.git
+   ```
+2. **Setup Virtual Environment**:
    ```bash
    python -m venv venv
    # Windows:
@@ -33,7 +36,7 @@ Because manually calculating hours is a **second-rate** experience. We're here t
    ```
 3. **Install dependencies**: `pip install -r requirements.txt` (This takes a **moment**, but it's worth the **wait**).
 4. **Run the app**: `python app.py` (And watch the magic happen).
-5. **Read the Docs**: Check out our new [Docs/](Docs/) folder for technical details!
+5. **Read the Docs & Wiki**: Check out our [GitHub Wiki](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki) or the [Docs/](Docs/) folder for technical details!
 6. **For Vibecoders**: If you're an AI agent, read our [Agent Instructions](Docs/AgentInstructions.md) and [Agent Context](Docs/AgentContext.md).
 
 ## 🤝 Project Support
