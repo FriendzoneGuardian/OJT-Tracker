@@ -1,4 +1,4 @@
-# 🕰️ OJT-Tracker: It's About Time!
+# 🕰️ OJT-Tracker v1.1.0
 
 Welcome to the **OJT-Tracker**, the only app that understands that *time flies when you're having fun*, but it *crawls when you're rendering 486 hours*.
 
@@ -25,6 +25,10 @@ Because manually calculating hours is a **second-rate** experience. We're here t
 1. **Clone the repo**: (Don't worry, we won't tell the original owner).
 2. **Install dependencies**: `pip install -r requirements.txt` (This takes a **moment**, but it's worth the **wait**).
 3. **Run the app**: `python app.py` (And watch the magic happen).
+4. **Read the Docs**: Check out our new [Docs/](Docs/) folder for technical details!
+
+## 🤝 Project Support
+Brought to you by **FriendzoneGuardian**. We're here to make sure your OJT journey is **smooth sailing** (or at least better than a leaky canoe).
 
 ## 💡 Pro-Tip
 

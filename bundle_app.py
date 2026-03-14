@@ -20,7 +20,8 @@ def build():
         "--windowed", # Remove this if you want IT to see terminal logs
         "--add-data", "templates;templates",
         "--add-data", "static;static",
-        "--name", "OJT-Tracker-v1.1",
+        "--add-data", "Docs;Docs",
+        "--name", "FriendzoneGuardian-OJT-Tracker-v1.1.0",
         "app.py"
     ]
     
