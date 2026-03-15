@@ -59,8 +59,6 @@ If you've already installed the app and just want to start it again:
    
    # Mac/Linux
    source venv/bin/activate && python app.py
-   ```
-   *Alternatively, just double-click **run.bat** if you're on Windows!*
 6. **For Vibecoders**: If you're an AI agent, read our [Agent Instructions](Docs/AgentInstructions.md) and [Agent Context](Docs/AgentContext.md).
 
 ## 🤝 Project Support
