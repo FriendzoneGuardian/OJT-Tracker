@@ -18,9 +18,18 @@ Instance/
 Thumbs.db
 Desktop.ini
 
+# Node / Electron
+node_modules/
+dist_electron/
+*.exe
+*.msi
+*.zip
+
 # Project Specific
 .gemini/
 .agents/
 .agent/
 brain/
 *.log
+data/snapshots/
+test_ojt_tracker.db

@@ -1,4 +1,4 @@
-# 🕰️ OJT-Tracker v1.2.4
+# 🕰️ OJT-Tracker v1.3.0 (Shell-Shocked)
 
 Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 486 hours_.
 
@@ -12,11 +12,12 @@ Because manually calculating hours is a **second-rate** experience. We're here t
 
 ## 🚀 Features (That don't slack off)
 
-- **Entry Management**: Did you make a mistake? No problem. Just **rewind** and edit or delete entries. It's like a time machine, but without the paradoxes.
-- **Smart Holiday Tracker**: Our new **Calendar** modal is a real **game-changer**. It skips weekends and holidays so your end date doesn't come as a **surprise shock**.
-- **Auto-Cleanup**: The app **cleans up its act** by removing past holidays automatically. It's like a janitor for your schedule!
-- **Trajectory Analysis**: Ever wonder when you'll finally be free? Our AI (Actually Ingenious) math predicts your **Expected End Date**. It’s like a crystal ball, but with fewer scams.
-- **7-Item Pagination**: We've **page-turned** our list management. It's strictly limited to 7 items, because 8 would just be **overtime**.
+- **Electron Shell**: Now runs as a native desktop application! No more browser tabs cluttering your life.
+- **Entry Management**: Did you make a mistake? No problem. Just **rewind** and edit or delete entries.
+- **Smart Holiday Tracker**: Our **Calendar** modal skips weekends and holidays so your end date doesn't come as a **surprise shock**.
+- **Auto-Cleanup**: The app **cleans up its act** by removing past holidays automatically.
+- **Trajectory Analysis**: Our Actually Ingenious math predicts your **Expected End Date**.
+- **Multi-Modal Support**: Toggle weekends and settings with a **click**.
 - **Excel Export**: Turn your hard work into a spreadsheet faster than you can say **"spreadsheet-tacular"**.
 - **AMOLED Dark Mode**: Because your eyes deserve a **break**, even if you don't.
 
@@ -26,23 +27,25 @@ Because manually calculating hours is a **second-rate** experience. We're here t
    ```bash
    git clone https://github.com/FriendzoneGuardian/OJT-Tracker.git
    ```
-2. **Enter the directory**: (Don't skip this, or your `venv` will be lost in space!)
+2. **Enter the directory**:
    ```bash
    cd OJT-Tracker
    ```
-3. **Setup Virtual Environment**:
+3. **Setup Backend (Python)**:
    ```bash
-   # Create it inside the folder
    python -m venv venv
-   
-   # Activate it
-   # Windows:
    venv\Scripts\activate
-   # Mac/Linux:
-   source venv/bin/activate
+   pip install -r requirements.txt
    ```
-4. **Install dependencies**: `pip install -r requirements.txt` (This takes a **moment**, but it's worth the **wait**).
-5. **Run the app**: `python app.py` (And watch the magic happen).
+4. **Setup Frontend (Electron)**:
+   ```bash
+   npm install
+   ```
+5. **Run the app**:
+   ```bash
+   npm start
+   ```
+   *(Running `npm start` automatically handles the Flask backend for you!)*
 5. **Read the Docs & Wiki**: Check out our [GitHub Wiki](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki) or the [Docs/](Docs/) folder for technical details!
 6. **Kitchen Nightmares**: [READ THE GORDON RAMSAY INSTALL GUIDE](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Kitchen-Nightmares) (For the Doughnuts).
 

@@ -14,7 +14,7 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
-VERSION = "1.2.4"
+VERSION = "1.3.0"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -347,4 +347,9 @@ def export_entries():
     )
 
 if __name__ == '__main__':
-    app.run(port=8080, debug=True)
+    # Stealth mode for Electron: Suppress banner and logging if not in debug
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+        
+    app.run(host='127.0.0.1', port=8080, debug=False)

@@ -5,19 +5,19 @@ The OJT-Tracker is a Flask-based web application designed to help interns and st
 
 ## Architecture
 
-### Backend (Python/Flask)
+### Backend (Python/Flask) - The Sidecar
 - **Framework**: Flask 3.0.x
 - **Database**: SQLite (via Flask-SQLAlchemy)
+- **Data Path**: `data/ojt_tracker.db` (Portable logic)
 - **Models**:
     - `OJTEntry`: Stores daily logs (date, morning in/out, afternoon in/out, total hours).
-    - `Settings`: Stores application-wide configurations like `target_hours`.
+    - `Settings`: Stores application-wide configurations (target hours, weekend toggles).
     - `Holiday`: Stores national holidays or official non-working days.
-    - `ExcludedDate`: Stores user-defined exclusions (personal days, etc.).
-- **Key Libraries**:
-    - `pandas` & `xlsxwriter`: Used for generating Excel exports.
-    - `matplotlib` & `seaborn`: Used for generating progress charts.
+    - `ExcludedDate`: Stores user-defined exclusions.
 
-### Frontend (HTML/JS/CSS)
+### Frontend (Desktop Shell)
+- **Runtime**: Electron
+- **Communication**: Inter-Process Communication (IPC) via `main.js`.
 - **Styling**: Tailwind CSS for a premium, dark-mode first design.
 - **Icons**: Lucide-JS for consistent iconography.
 - **Dynamic Updates**: Pure JavaScript (Fetch API) for real-time data rendering without page reloads.
@@ -48,23 +48,31 @@ The OJT-Tracker is a Flask-based web application designed to help interns and st
 - `DELETE /api/exclusions/<id>`: Remove an exclusion.
 - `GET /api/export`: Downloads the entire log as an `.xlsx` file.
 
-## Setup & Development
+## Setup & Development (Shell-Shocked)
 
-1. **Environment**:
+1. **Python Environment**:
    ```bash
    python -m venv venv
-   source venv/bin/activate  # venv\Scripts\activate on Windows
-   pip install flask flask-sqlalchemy pandas xlsxwriter matplotlib seaborn
+   venv\Scripts\activate
+   pip install -r requirements.txt
    ```
 
-2. **Database Initialization**:
-   The database (`ojt_tracker.db`) is automatically created in the `instance/` folder upon the first run of the application.
+2. **Node/Electron**:
+   ```bash
+   npm install
+   ```
 
 3. **Running**:
    ```bash
-   python app.py
+   npm start
    ```
-   The application defaults to `http://localhost:8080`.
+   The application will launch in its own window. Backend logs are suppressed by default for a clean Vibe.
+
+4. **Building Portable EXE**:
+   ```bash
+   npm run dist
+   ```
+   Output will be in the `dist_electron/` folder.
 
 ## Implementation Notes
 - **Smart Trajectory Calculation**: The system projects the completion date by iteratively skipping weekends, national holidays, and user-defined exclusions.

@@ -19,7 +19,7 @@
                 <div class="p-2 bg-scarlet-600 rounded-xl text-white">
                     <i data-lucide="clock"></i>
                 </div>
-                <h1 class="text-xl font-bold tracking-tight">OJT Tracker</h1>
+                <h1 class="text-xl font-bold tracking-tight">OJT Tracker <span id="sidebar-version-tag" class="text-xs font-normal text-zinc-500">v{{ version }}</span></h1>
             </div>
 
             <!-- Circular Progress -->
@@ -136,8 +136,18 @@
         </main>
     </div>
 
+    <!-- Unified Modal Controller -->
+    <script>
+        function closeAllModals() {
+            ['settings-modal', 'calendar-modal', 'entry-modal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+        }
+    </script>
+
     <!-- Settings Modal (Cleaned up) -->
-    <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div id="settings-modal" onclick="if(event.target === this) toggleSettings(false)" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
             <div class="p-8">
                 <div class="flex justify-between items-center mb-6">
@@ -244,8 +254,8 @@
         </div>
     </div>
 
-    <!-- Modal -->
-    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <!-- Entry Modal -->
+    <div id="entry-modal" onclick="if(event.target === this) toggleModal(false)" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
             <div class="p-8">
                 <div class="flex justify-between items-center mb-6">
@@ -322,7 +332,8 @@
         }
 
         function toggleModal(show) {
-            const modal = document.getElementById('modal');
+            if (show) closeAllModals();
+            const modal = document.getElementById('entry-modal');
             modal.classList.toggle('hidden', !show);
             if(show) {
                 if (!document.getElementById('date').value) {
@@ -493,6 +504,7 @@
         }
 
         async function toggleCalendar(show) {
+            if (show) closeAllModals();
             const modal = document.getElementById('calendar-modal');
             modal.classList.toggle('hidden', !show);
             if (show) {
@@ -502,6 +514,7 @@
         }
 
         async function toggleSettings(show) {
+            if (show) closeAllModals();
             const modal = document.getElementById('settings-modal');
             modal.classList.toggle('hidden', !show);
             if (show) {
@@ -555,11 +568,12 @@
 
         function filterTable() {
             const query = document.getElementById('table-search').value.toLowerCase();
-            const rows = document.querySelectorAll('#entries-table-body tr');
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(query) ? '' : 'none';
-            });
+            const rows = document.getElementById('entries-table-body').getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const text = rows[i].textContent.toLowerCase();
+                rows[i].style.display = text.includes(query) ? '' : 'none';
+            }
         }
 
         async function fetchEntries() {
