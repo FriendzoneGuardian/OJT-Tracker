@@ -47,7 +47,8 @@ Because manually calculating hours is a **second-rate** experience. We're here t
    ```
    *(Running `npm start` automatically handles the Flask backend for you!)*
 5. **Read the Docs & Wiki**: Check out our [GitHub Wiki](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki) or the [Docs/](Docs/) folder for technical details!
-6. **Kitchen Nightmares**: [READ THE GORDON RAMSAY INSTALL GUIDE](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Kitchen-Nightmares) (For the Doughnuts).
+6. **Kitchen Nightmares**: [READ THE GORDON RAMSAY INSTALL GUIDE](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Kitchen-Nightmares). 
+7. **Spicy FAQ**: [KITCHEN NIGHTMARES FAQ](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Kitchen-Nightmares-FAQ) (Warning: Selective Language).
 
 ## ⚡ Quick Start (Re-running the app)
 If you've already installed the app and just want to start it again:
