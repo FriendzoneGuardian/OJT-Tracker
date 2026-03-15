@@ -34,20 +34,33 @@ This document tracks the progress of the OJT-Tracker development.
 - [x] Update README with `venv` activation steps
 - [x] Final Git Push
 
-### Phase 5: Documentation Migration [COMPLETED]
-- [x] Create project `Docs/` directory
-- [x] Migrated `implementation_plan.md`
-- [x] Migrated `task_tracker.md`
-- [x] Migrated `walkthrough.md`
-- [x] Agent-Specific Documentation (`AgentInstructions.md`, `AgentContext.md`) [COMPLETED]
+### Phase 7: Project Debloat (v1.3.1) [COMPLETED]
+- [x] Remove legacy PyInstaller scripts and obsolete launchers
+- [x] Delete redundant `instance/` and `license/` folders
+- [x] Streamline repository structure for Sidecar deployment
+
+### Phase 8: Electron native Shell (v1.3.0) [COMPLETED]
+- [x] Initialize Electron environment (`package.json`, `main.js`)
+- [x] Implement Sidecar Architecture (Electron spawns Flask)
+- [x] Standardize on AMOLED Dark Mode
+- [x] Stress Test: "Shift Storm" UI Refinements (Search/Modals)
 
 ### Phase 9: Temporal Archives (v1.4.0) [COMPLETED]
-- [x] v1.3.2 Connection Hotfix (127.0.0.1 standardized)
+- [x] v1.3.2 Connection Hotfix (127.0.0.1 standardized + Retry Loop)
 - [x] Multi-Format Export (Excel, CSV, TXT)
 - [x] Database Snapshotting (Automated Backups)
 - [x] Import Wizard (History Merging for DB/CSV/XLS)
 
-### Phase 10: Final Polish & Tagging [IN PROGRESS]
-- [/] Update all docs to v1.4.0
-- [ ] Push changes to `v1.4-temporal-archives`
-- [ ] Commit and Tag `v1.4.0`
+### Phase 10: Final Polish & Roadmap Sync [COMPLETED]
+- [x] Update all docs to v1.4.0
+- [x] Backfill Project History (v1.0 - v1.3) ✅
+- [x] Tag and Release `v1.4.0` ✅
+- [x] Sync Main Repo and Wiki ✅
+
+## Roadmap Summary
+| Version | Codename | Key Feature |
+|---------|----------|-------------|
+| v1.1.0 | Foundation | Portable Data & SQL logic |
+| v1.2.0 | Trajectory | Smart Calendar & Predictions |
+| v1.3.0 | Shell-Shocked | Electron Desktop Shell |
+| v1.4.0 | Temporal Archives | Snapshots & Import Wizard |
