@@ -77,5 +77,5 @@ The OJT-Tracker is a Flask-based web application designed to help interns and st
 ## Implementation Notes
 - **Smart Trajectory Calculation**: The system projects the completion date by iteratively skipping weekends, national holidays, and user-defined exclusions.
 - **Auto-Cleanup**: On application startup, the system automatically removes `Holiday` and `ExcludedDate` records that are in the past.
-- **Pagination**: The Holiday Tracker UI implements client-side pagination (7 items per page) for optimal performance and readability.
-- **Rendering Fix**: Ensure the `settings-modal` and `calendar-modal` HTML are present in `index.html` to avoid JavaScript initialization errors.
+- **Pagination**: The Holiday Tracker UI implements client-side pagination (7 items per page).
+- **Branding**: Humorous documentation is maintained under the **"Shift Storm"** series on the GitHub Wiki.

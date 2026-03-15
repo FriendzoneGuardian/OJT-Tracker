@@ -47,6 +47,7 @@ Because manually calculating hours is a **second-rate** experience. We're here t
    ```
    *(Running `npm start` automatically handles the Flask backend for you!)*
 5. **Read the Docs & Wiki**: Check out our [GitHub Wiki](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki) or the [Docs/](Docs/) folder for technical details!
+5. **Read the Docs & Wiki**: Check out our [GitHub Wiki](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki) or the [Docs/](Docs/) folder for technical details!
 6. **Shift Storm**: [READ THE SETUP ORDEAL GUIDE](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Shift-Storm). 
 7. **Spicy FAQ**: [SHIFT STORM FAQ](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Shift-Storm-FAQ) (Warning: Selective Language).
 
