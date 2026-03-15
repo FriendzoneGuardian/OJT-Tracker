@@ -14,7 +14,11 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
-VERSION = "1.3.0"
+SNAPSHOT_DIR = os.path.join(DATA_DIR, 'snapshots')
+if not os.path.exists(SNAPSHOT_DIR):
+    os.makedirs(SNAPSHOT_DIR)
+
+VERSION = "1.4.0"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -345,6 +349,153 @@ def export_entries():
         as_attachment=True,
         download_name=f'OJT_Log_{datetime.now().strftime("%Y-%m-%d")}.xlsx'
     )
+
+@app.route('/api/export/multi')
+def export_multi():
+    fmt = request.args.get('format', 'xlsx')
+    entries = OJTEntry.query.order_by(OJTEntry.date).all()
+    data = []
+    for e in entries:
+        data.append({
+            'Date': e.date,
+            'Morning In': e.morn_in,
+            'Morning Out': e.morn_out,
+            'Afternoon In': e.aftie_in,
+            'Afternoon Out': e.aftie_out,
+            'Total Hours': e.total_hours
+        })
+    df = pd.DataFrame(data)
+    
+    output = io.BytesIO()
+    
+    if fmt == 'csv':
+        df.to_csv(output, index=False)
+        output.seek(0)
+        return send_file(output, mimetype='text/csv', as_attachment=True, download_name=f'OJT_Export_{datetime.now().strftime("%Y%m%d")}.csv')
+    
+    elif fmt == 'txt':
+        # Text Summary
+        text = f"OJT TRACKER SUMMARY - {datetime.now().strftime('%Y-%m-%d')}\n"
+        text += "="*40 + "\n"
+        for _, row in df.iterrows():
+            text += f"{row['Date']} | {row['Total Hours']}h | (AM: {row['Morning In']}-{row['Morning Out']} | PM: {row['Afternoon In']}-{row['Afternoon Out']})\n"
+        output.write(text.encode('utf-8'))
+        output.seek(0)
+        return send_file(output, mimetype='text/plain', as_attachment=True, download_name=f'OJT_Summary_{datetime.now().strftime("%Y%m%d")}.txt')
+    
+    else: # Default XLSX
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='OJT Log')
+        output.seek(0)
+        return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=f'OJT_Log_{datetime.now().strftime("%Y%m%d")}.xlsx')
+
+@app.route('/api/snapshot', methods=['POST'])
+def create_snapshot():
+    import shutil
+    db_path = os.path.join(DATA_DIR, 'ojt_tracker.db')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    snapshot_path = os.path.join(SNAPSHOT_DIR, f"snapshot_{timestamp}.db.bak")
+    shutil.copy2(db_path, snapshot_path)
+    return jsonify({'status': 'success', 'file': f"snapshot_{timestamp}.db.bak"})
+
+@app.route('/api/snapshots')
+def list_snapshots():
+    files = [f for f in os.listdir(SNAPSHOT_DIR) if f.endswith('.db.bak')]
+    files.sort(reverse=True)
+    return jsonify(files)
+
+@app.route('/api/import', methods=['POST'])
+def import_data():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    temp_path = os.path.join(DATA_DIR, 'temp_import_' + file.filename)
+    file.save(temp_path)
+
+    imported_count = 0
+    skipped_count = 0
+
+    try:
+        if temp_path.endswith('.db') or temp_path.endswith('.db.bak'):
+            # SQLite Import
+            import sqlite3
+            conn = sqlite3.connect(temp_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT date, morn_in, morn_out, aftie_in, aftie_out, total_hours FROM ojt_entry")
+            rows = cursor.fetchall()
+            for row in rows:
+                date_str = row[0]
+                # Check for duplicate
+                exists = OJTEntry.query.filter_by(date=datetime.strptime(date_str, '%Y-%m-%d').date()).first()
+                if not exists:
+                    new_entry = OJTEntry(
+                        date=datetime.strptime(date_str, '%Y-%m-%d').date(),
+                        morn_in=row[1],
+                        morn_out=row[2],
+                        aftie_in=row[3],
+                        aftie_out=row[4],
+                        total_hours=row[5]
+                    )
+                    db.session.add(new_entry)
+                    imported_count += 1
+                else:
+                    skipped_count += 1
+            conn.close()
+
+        elif temp_path.endswith('.csv'):
+            df = pd.read_csv(temp_path)
+            for _, row in df.iterrows():
+                dt = pd.to_datetime(row['Date']).date()
+                exists = OJTEntry.query.filter_by(date=dt).first()
+                if not exists:
+                    new_entry = OJTEntry(
+                        date=dt,
+                        morn_in=row.get('Morning In', row.get('morn_in')),
+                        morn_out=row.get('Morning Out', row.get('morn_out')),
+                        aftie_in=row.get('Afternoon In', row.get('aftie_in')),
+                        aftie_out=row.get('Afternoon Out', row.get('aftie_out')),
+                        total_hours=float(row.get('Total Hours', row.get('total_hours', 0)))
+                    )
+                    db.session.add(new_entry)
+                    imported_count += 1
+                else:
+                    skipped_count += 1
+
+        elif temp_path.endswith('.xlsx') or temp_path.endswith('.xls'):
+            df = pd.read_excel(temp_path)
+            for _, row in df.iterrows():
+                dt = pd.to_datetime(row['Date']).date()
+                exists = OJTEntry.query.filter_by(date=dt).first()
+                if not exists:
+                    new_entry = OJTEntry(
+                        date=dt,
+                        morn_in=row.get('Morning In', row.get('morn_in')),
+                        morn_out=row.get('Morning Out', row.get('morn_out')),
+                        aftie_in=row.get('Afternoon In', row.get('aftie_in')),
+                        aftie_out=row.get('Afternoon Out', row.get('aftie_out')),
+                        total_hours=float(row.get('Total Hours', row.get('total_hours', 0)))
+                    )
+                    db.session.add(new_entry)
+                    imported_count += 1
+                else:
+                    skipped_count += 1
+        
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+    return jsonify({
+        'status': 'success',
+        'imported': imported_count,
+        'skipped': skipped_count
+    })
 
 if __name__ == '__main__':
     # Stealth mode for Electron: Suppress banner and logging if not in debug
