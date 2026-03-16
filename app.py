@@ -18,7 +18,7 @@ SNAPSHOT_DIR = os.path.join(DATA_DIR, 'snapshots')
 if not os.path.exists(SNAPSHOT_DIR):
     os.makedirs(SNAPSHOT_DIR)
 
-VERSION = "1.6.0 (Clockwork Calibration)"
+VERSION = "1.6.1 (Clockwork Calibration - Hotfix)"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -141,9 +141,10 @@ def cleanup_past_dates():
     db.session.commit()
 
 with app.app_context():
+    print("[BOOT] Phase 1: Validating Database Schema...")
     db.create_all()
     
-    # Manual Schema Migration for v1.6.0 (Adding columns if they don't exist)
+    print("[BOOT] Phase 2: Running Clockwork Migrations...")
     try:
         from sqlalchemy import text
         # Settings table
@@ -166,8 +167,10 @@ with app.app_context():
     except Exception as e:
         print(f"Migration Notice: {e}")
 
+    print("[BOOT] Phase 3: Cleaning Temporal Archives...")
     cleanup_past_dates()
     # Seed 2026 Philippine Holidays
+    print("[BOOT] Phase 4: Synchronizing Holidays...")
     if Holiday.query.count() == 0:
         ph_holidays = [
             ('2026-01-01', 'New Year\'s Day'),
@@ -193,6 +196,7 @@ with app.app_context():
             h = Holiday(date=datetime.strptime(date_str, '%Y-%m-%d').date(), name=name)
             db.session.add(h)
         db.session.commit()
+    print("[BOOT] Engine Ready. Launching Handshake...")
 
 @app.route('/')
 def index():
