@@ -18,7 +18,7 @@ SNAPSHOT_DIR = os.path.join(DATA_DIR, 'snapshots')
 if not os.path.exists(SNAPSHOT_DIR):
     os.makedirs(SNAPSHOT_DIR)
 
-VERSION = "1.6.1 (Clockwork Calibration - Hotfix)"
+VERSION = "1.6.4 (Clockwork Calibration - Hotfix 4)"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -240,6 +240,19 @@ def add_entry():
     db.session.commit()
     return jsonify({'message': 'Success', 'entry_id': entry.id})
 
+@app.route('/api/entries/recalculate', methods=['POST'])
+def recalculate_all():
+    try:
+        entries = OJTEntry.query.all()
+        settings = Settings.get_settings_obj()
+        for e in entries:
+            e.calculate_hours(allow_overtime=settings.allow_overtime)
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': f'Recalculated {len(entries)} entries.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/api/entries/<int:entry_id>', methods=['DELETE'])
 def delete_entry(entry_id):
     entry = OJTEntry.query.get_or_404(entry_id)
@@ -457,70 +470,77 @@ def get_chart():
 
 @app.route('/api/export')
 def export_entries():
-    entries = OJTEntry.query.order_by(OJTEntry.date).all()
-    data = []
-    for e in entries:
-        data.append({
-            'Date': e.date,
-            'Morning In': e.morn_in,
-            'Morning Out': e.morn_out,
-            'Afternoon In': e.aftie_in,
-            'Afternoon Out': e.aftie_out,
-            'Total Hours': e.total_hours
-        })
-    df = pd.DataFrame(data)
-    
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='OJT Log')
-    output.seek(0)
-    
-    from flask import send_file
-    return send_file(
-        output,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        as_attachment=True,
-        download_name=f'OJT_Log_{datetime.now().strftime("%Y-%m-%d")}.xlsx'
-    )
-
-@app.route('/api/export/multi')
-def export_multi():
-    fmt = request.args.get('format', 'xlsx')
-    entries = OJTEntry.query.order_by(OJTEntry.date).all()
-    data = []
-    for e in entries:
-        data.append({
-            'Date': e.date,
-            'Morning In': e.morn_in,
-            'Morning Out': e.morn_out,
-            'Afternoon In': e.aftie_in,
-            'Afternoon Out': e.aftie_out,
-            'Total Hours': e.total_hours
-        })
-    df = pd.DataFrame(data)
-    
-    output = io.BytesIO()
-    
-    if fmt == 'csv':
-        df.to_csv(output, index=False)
-        output.seek(0)
-        return send_file(output, mimetype='text/csv', as_attachment=True, download_name=f'OJT_Export_{datetime.now().strftime("%Y%m%d")}.csv')
-    
-    elif fmt == 'txt':
-        # Text Summary
-        text = f"OJT TRACKER SUMMARY - {datetime.now().strftime('%Y-%m-%d')}\n"
-        text += "="*40 + "\n"
-        for _, row in df.iterrows():
-            text += f"{row['Date']} | {row['Total Hours']}h | (AM: {row['Morning In']}-{row['Morning Out']} | PM: {row['Afternoon In']}-{row['Afternoon Out']})\n"
-        output.write(text.encode('utf-8'))
-        output.seek(0)
-        return send_file(output, mimetype='text/plain', as_attachment=True, download_name=f'OJT_Summary_{datetime.now().strftime("%Y%m%d")}.txt')
-    
-    else: # Default XLSX
+    try:
+        entries = OJTEntry.query.order_by(OJTEntry.date).all()
+        data = []
+        for e in entries:
+            data.append({
+                'Date': str(e.date) if e.date else '',
+                'Morning In': str(e.morn_in or ''),
+                'Morning Out': str(e.morn_out or ''),
+                'Afternoon In': str(e.aftie_in or ''),
+                'Afternoon Out': str(e.aftie_out or ''),
+                'Night Shift': 'Yes' if getattr(e, 'is_night_shift', False) else 'No',
+                'Total Hours': float(e.total_hours or 0.0)
+            })
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name='OJT Log')
         output.seek(0)
-        return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=f'OJT_Log_{datetime.now().strftime("%Y%m%d")}.xlsx')
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'OJT_Log_{datetime.now().strftime("%Y-%m-%d")}.xlsx'
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/export/multi')
+def export_multi():
+    try:
+        fmt = request.args.get('format', 'xlsx')
+        entries = OJTEntry.query.order_by(OJTEntry.date).all()
+        data = []
+        for e in entries:
+            data.append({
+                'Date': str(e.date) if e.date else '',
+                'Morning In': str(e.morn_in or ''),
+                'Morning Out': str(e.morn_out or ''),
+                'Afternoon In': str(e.aftie_in or ''),
+                'Afternoon Out': str(e.aftie_out or ''),
+                'Night Shift': 'Yes' if getattr(e, 'is_night_shift', False) else 'No',
+                'Total Hours': float(e.total_hours or 0.0)
+            })
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        
+        if fmt == 'csv':
+            df.to_csv(output, index=False)
+            output.seek(0)
+            return send_file(output, mimetype='text/csv', as_attachment=True, download_name=f'OJT_Export_{datetime.now().strftime("%Y%m%d")}.csv')
+        
+        elif fmt == 'txt':
+            text = f"OJT TRACKER SUMMARY - {datetime.now().strftime('%Y-%m-%d')}\n"
+            text += "="*40 + "\n"
+            for _, row in df.iterrows():
+                shift_tag = " [NIGHT]" if row.get('Night Shift') == 'Yes' else ""
+                text += f"{row['Date']}{shift_tag} | {row['Total Hours']}h | (AM: {row['Morning In']}-{row['Morning Out']} | PM: {row['Afternoon In']}-{row['Afternoon Out']})\n"
+            output.write(text.encode('utf-8'))
+            output.seek(0)
+            return send_file(output, mimetype='text/plain', as_attachment=True, download_name=f'OJT_Summary_{datetime.now().strftime("%Y%m%d")}.txt')
+        
+        else: # Default XLSX
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                df.to_excel(writer, index=False, sheet_name='OJT Log')
+            output.seek(0)
+            return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=f'OJT_Log_{datetime.now().strftime("%Y%m%d")}.xlsx')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/snapshot', methods=['POST'])
 def create_snapshot():
@@ -569,9 +589,10 @@ def import_data():
                         morn_in=row[1],
                         morn_out=row[2],
                         aftie_in=row[3],
-                        aftie_out=row[4],
-                        total_hours=row[5]
+                        aftie_out=row[4]
                     )
+                    # Calibration Sync
+                    new_entry.calculate_hours(allow_overtime=Settings.get_settings_obj().allow_overtime)
                     db.session.add(new_entry)
                     imported_count += 1
                 else:
@@ -589,9 +610,10 @@ def import_data():
                         morn_in=row.get('Morning In', row.get('morn_in')),
                         morn_out=row.get('Morning Out', row.get('morn_out')),
                         aftie_in=row.get('Afternoon In', row.get('aftie_in')),
-                        aftie_out=row.get('Afternoon Out', row.get('aftie_out')),
-                        total_hours=float(row.get('Total Hours', row.get('total_hours', 0)))
+                        aftie_out=row.get('Afternoon Out', row.get('aftie_out'))
                     )
+                    # Calibration Sync
+                    new_entry.calculate_hours(allow_overtime=Settings.get_settings_obj().allow_overtime)
                     db.session.add(new_entry)
                     imported_count += 1
                 else:
@@ -608,9 +630,10 @@ def import_data():
                         morn_in=row.get('Morning In', row.get('morn_in')),
                         morn_out=row.get('Morning Out', row.get('morn_out')),
                         aftie_in=row.get('Afternoon In', row.get('aftie_in')),
-                        aftie_out=row.get('Afternoon Out', row.get('aftie_out')),
-                        total_hours=float(row.get('Total Hours', row.get('total_hours', 0)))
+                        aftie_out=row.get('Afternoon Out', row.get('aftie_out'))
                     )
+                    # Calibration Sync
+                    new_entry.calculate_hours(allow_overtime=Settings.get_settings_obj().allow_overtime)
                     db.session.add(new_entry)
                     imported_count += 1
                 else:
