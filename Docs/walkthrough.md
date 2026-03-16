@@ -1,6 +1,7 @@
-# FriendzoneGuardian OJT-Tracker: Implementation Walkthrough
+# FriendzoneGuardian OJT-Tracker:
+# v1.5.0 "Heat of the Moment" Walkthrough 🎨🧬
 
-This document showcases the key features and implementation details of the OJT-Tracker v1.1.0.
+This document showcases the key features and implementation details of the OJT-Tracker.
 
 ## 🚀 Key Features
 

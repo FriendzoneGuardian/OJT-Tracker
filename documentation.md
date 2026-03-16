@@ -1,4 +1,4 @@
-# OJT-Tracker Technical Documentation
+# OJT-Tracker Technical Documentation (v1.5.0 "Heat of the Moment")
 
 ## Overview
 The OJT-Tracker is a Flask-based web application designed to help interns and students track their On-the-Job Training (OJT) hours. It features a robust backend using SQLAlchemy and a modern, responsive frontend built with Tailwind CSS.

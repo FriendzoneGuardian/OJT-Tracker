@@ -1,4 +1,4 @@
-# 🕰️ OJT-Tracker v1.5.0 (Visuals & Aesthetics)
+# 🕰️ OJT-Tracker v1.5.0 "Heat of the Moment"
 
 Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 500 hours_.
 
