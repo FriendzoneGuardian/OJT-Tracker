@@ -67,11 +67,18 @@ The OJT-Tracker is a Flask-based web application designed to help interns and st
    npm install
    ```
 
-3. **Running**:
-   ```bash
-   npm start
-   ```
-   The application will launch in its own window. Backend logs are suppressed by default for a clean Vibe.
+## ⚡ Bootstrap Matrix (Running the App)
+
+| Method | Plan | Context | Command |
+| :--- | :--- | :--- | :--- |
+| **A: Primary** | **Automated** | Native Desktop App | `npm start` |
+| **B: PowerShell** | **Manual Venv** | Terminal-First | `.\venv\Scripts\Activate.ps1; npm start` |
+| **C: Standalone** | **Solo-Python** | Pre-v1.3 Legacy | `venv\Scripts\activate; python app.py` |
+
+### Implementation Notes (v1.6.8+)
+- **Cold Start Protocol**: `main.js` automatically detects if a `venv` folder exists and uses its Python interpreter. Manual activation is only required for installing dependencies or running standalone.
+- **Plan B (PowerShell)**: Requires `RemoteSigned` execution policy. Use this if `npm start` fails to launch the sub-process.
+- **Plan C (Standalone)**: The backend serves the dashboard at `http://127.0.0.1:8080`. Ideal for debugging or low-spec systems.
 
 4. **Building Portable EXE**:
    ```bash

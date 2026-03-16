@@ -25,43 +25,34 @@ Because manually calculating hours is a **second-rate** experience. We're here t
    ```bash
    git clone https://github.com/FriendzoneGuardian/OJT-Tracker.git
    ```
-2. **Enter the directory**:
+2. **Setup Environment (Mise en Place)**:
    ```bash
    cd OJT-Tracker
-   ```
-3. **Setup Backend (Python)**:
-   ```bash
    python -m venv venv
+   # Activation is handled automatically by 'npm start' in v1.6.8+
+   # But you still need to install the initial dependencies:
    venv\Scripts\activate
    pip install -r requirements.txt
-   ```
-4. **Setup Frontend (Electron)**:
-   ```bash
    npm install
    ```
-5. **Run the app**:
+3. **Run the app**:
    ```bash
    npm start
    ```
-   _(Running `npm start` automatically handles the Flask backend for you!)_
-6. **Read the Docs & Wiki**: Check out our [GitHub Wiki](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki) or the [Docs/](Docs/) folder for technical details!
-7. **Shift Storm**: [READ THE SETUP ORDEAL GUIDE](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Shift-Storm).
-8. **Spicy FAQ**: [SHIFT STORM FAQ](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Shift-Storm-FAQ) (Warning: Selective Language).
 
-## ⚡ Quick Start (Re-running the app)
+## ⚡ Bootstrap Matrix (Startup Methods)
 
-If you've already installed the app and just want to start it again:
+If the primary method fails, use the following manual fallback plans:
 
-1. Open your terminal in the `OJT-Tracker` folder.
-2. Run the magic command:
+| Method | Plan | Context | Command |
+| :--- | :--- | :--- | :--- |
+| **A: Primary** | **Automated** | Native Desktop App | `npm start` |
+| **B: PowerShell** | **Manual Venv** | Terminal-First | `.\venv\Scripts\Activate.ps1; npm start` |
+| **C: Standalone** | **Solo-Python** | Pre-v1.3 Legacy | `venv\Scripts\activate; python app.py` |
 
-   ```bash
-   # Windows
-   venv\Scripts\activate && python app.py
-
-   # Mac/Linux
-   source venv/bin/activate && python app.py
-   ```
+> [!TIP]
+> **Plan B (PowerShell)**: If your shell blocks scripts, run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` first.
+> **Plan C (Standalone)**: Use this if you don't need the Electron shell and prefer access via `http://localhost:8080` in your browser.
 
 3. **For Vibecoders**: If you're an AI agent, read our [Agent Instructions](Docs/AgentInstructions.md) and [Agent Context](Docs/AgentContext.md).
 

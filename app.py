@@ -18,7 +18,7 @@ SNAPSHOT_DIR = os.path.join(DATA_DIR, 'snapshots')
 if not os.path.exists(SNAPSHOT_DIR):
     os.makedirs(SNAPSHOT_DIR)
 
-VERSION = "1.6.4 (Clockwork Calibration - Hotfix 4)"
+VERSION = "1.6.8 (Clockwork Calibration - Hotfix 8)"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -109,27 +109,41 @@ class OJTEntry(db.Model):
                 else:
                     total_mins = end_point - start_point
         else:
-            # Standard Mode with Phantom Fix
-            # Morning block
-            if m_in is not None and m_out is not None:
-                total_mins += max(0, m_out - m_in)
+            # Standard Mode with Continuity Bridging
+            # 1. Blocks Calculation
+            m_block = (m_out - m_in) if (m_in is not None and m_out is not None) else 0
+            a_block = (a_out - a_in) if (a_in is not None and a_out is not None) else 0
             
-            # Afternoon block
-            if a_in is not None and a_out is not None:
-                total_mins += max(0, a_out - a_in)
-            
-            # Phantom Logic: If mid-day logs are missing but start and end are given
-            if m_in is not None and a_out is not None and m_out is None and a_in is None:
-                if a_out < m_in: # Edge case walk
-                    total_mins = (a_out + 1440) - m_in
+            # 2. Continuity Bridging (The 3-Punch / Missing Mid-Day Fix)
+            # If we have a clear Start (m_in) and End (a_out), and at least one other punch is missing or redundant
+            # but they collectively imply a single continuous span.
+            if m_in is not None and a_out is not None:
+                # If middle is partially missing (e.g. In --:-- In Out OR In Out --:-- Out)
+                # or if the user simply logs 3 punches (In, mid-In, Out)
+                if m_out is None or a_in is None:
+                    # Bridge the entire span
+                    span = a_out - m_in
+                    if a_out < m_in: span += 1440 # Midnight walk
+                    total_mins = span
                 else:
-                    total_mins = a_out - m_in
+                    # Both blocks exist, sum them
+                    total_mins = max(0, m_block) + max(0, a_block)
+            else:
+                # Only one block or scattered punches
+                total_mins = max(0, m_block) + max(0, a_block)
+                
+                # Phantom Logic: If only m_in and a_out provided (bridged above, 
+                # but adding a fallback for safety if m_out/a_in are both None)
+                if total_mins == 0 and m_in is not None and a_out is not None:
+                    span = a_out - m_in
+                    if a_out < m_in: span += 1440
+                    total_mins = span
 
         calculated = float(total_mins) / 60.0
         
         # Overtime Cap Logic
         if not allow_overtime:
-            self.total_hours = min(8.0, calculated)
+            self.total_hours = min(12.0, calculated)
         else:
             self.total_hours = calculated
 

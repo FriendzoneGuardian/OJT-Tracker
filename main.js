@@ -46,8 +46,35 @@ function startFlask() {
     // Reveal window immediately with loading screen
     createWindow();
 
-    // In production, we'll spawn the bundled EXE. In development, we use python.
-    const pythonPath = process.env.NODE_ENV === 'production' ? path.join(__dirname, 'dist/app.exe') : 'python';
+    // v1.6.6: Clean Slate Boot - Kill any lingering python processes before starting
+    const { execSync } = require('child_process');
+    try {
+        if (process.platform === 'win32') {
+            execSync('taskkill /F /IM python.exe /T', { stdio: 'ignore' });
+        }
+    } catch (e) {
+        // Ignore errors (e.g. no process to kill)
+    }
+
+    // v1.6.8: Cold Start Protocol - Automatic venv detection
+    let pythonPath = 'python'; // Default fallback
+    
+    if (process.env.NODE_ENV === 'production') {
+        pythonPath = path.join(__dirname, 'dist/app.exe');
+    } else {
+        const venvPath = process.platform === 'win32' 
+            ? path.join(__dirname, 'venv/Scripts/python.exe')
+            : path.join(__dirname, 'venv/bin/python');
+            
+        const fs = require('fs');
+        if (fs.existsSync(venvPath)) {
+            console.log(`[BOOT] Cold Start: venv detected at ${venvPath}`);
+            pythonPath = venvPath;
+        } else {
+            console.warn('[BOOT] Warning: No venv detected. Falling back to system python.');
+        }
+    }
+
     const scriptPath = process.env.NODE_ENV === 'production' ? '' : path.join(__dirname, 'app.py');
 
     const args = scriptPath ? [scriptPath] : [];
