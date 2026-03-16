@@ -1,6 +1,6 @@
 # 🕰️ OJT-Tracker v1.6.0 "Clockwork Calibration"
 
-Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 500 hours_.
+Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 486 hours_.
 
 If you're looking for a way to track your internship hours without losing your mind, you've come to the **right place at the right time**.
 
@@ -43,22 +43,27 @@ Because manually calculating hours is a **second-rate** experience. We're here t
    ```bash
    npm start
    ```
-   *(Running `npm start` automatically handles the Flask backend for you!)*
-5. **Read the Docs & Wiki**: Check out our [GitHub Wiki](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki) or the [Docs/](Docs/) folder for technical details!
-6. **Shift Storm**: [READ THE SETUP ORDEAL GUIDE](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Shift-Storm). 
-7. **Spicy FAQ**: [SHIFT STORM FAQ](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Shift-Storm-FAQ) (Warning: Selective Language).
+   _(Running `npm start` automatically handles the Flask backend for you!)_
+6. **Read the Docs & Wiki**: Check out our [GitHub Wiki](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki) or the [Docs/](Docs/) folder for technical details!
+7. **Shift Storm**: [READ THE SETUP ORDEAL GUIDE](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Shift-Storm).
+8. **Spicy FAQ**: [SHIFT STORM FAQ](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Shift-Storm-FAQ) (Warning: Selective Language).
 
 ## ⚡ Quick Start (Re-running the app)
+
 If you've already installed the app and just want to start it again:
+
 1. Open your terminal in the `OJT-Tracker` folder.
 2. Run the magic command:
+
    ```bash
    # Windows
    venv\Scripts\activate && python app.py
-   
+
    # Mac/Linux
    source venv/bin/activate && python app.py
-6. **For Vibecoders**: If you're an AI agent, read our [Agent Instructions](Docs/AgentInstructions.md) and [Agent Context](Docs/AgentContext.md).
+   ```
+
+3. **For Vibecoders**: If you're an AI agent, read our [Agent Instructions](Docs/AgentInstructions.md) and [Agent Context](Docs/AgentContext.md).
 
 ## 🤝 Project Support
 
