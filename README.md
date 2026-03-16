@@ -1,4 +1,4 @@
-# 🕰️ OJT-Tracker v1.5.0 "Heat of the Moment"
+# 🕰️ OJT-Tracker v1.6.0 "Clockwork Calibration"
 
 Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 500 hours_.
 
@@ -12,9 +12,11 @@ Because manually calculating hours is a **second-rate** experience. We're here t
 
 ## 🚀 Features (That don't slack off)
 
-- **Temporal Heatmaps**: A new Github-style intensity map is now the primary visual tool.
-- **Toggleable Visuals**: Switch between Heatmap and Bar Charts at the click of a button.
-- **AMOLED & Dark Mode**: Pixel-perfect readability hotfixes for dropdowns, selects, and menus.
+- **Clockwork Engine**: Refactored logic for Night Owl shifts, Time-Walk crossovers, and Phantom Time fixes.
+- **Auto-Normalization**: Type `1:00` in Afternoon fields and it magically becomes `13:00` (Intelligently disabled for Night Owls).
+- **Projection Calibration**: Switch between Rolling Average and Manual Speed (hrs/day) strategies in Settings.
+- **Temporal Heatmaps**: A GitHub-style intensity map showing work density over the last 8 weeks.
+- **Overtime Architecture**: Global toggle to allow uncapped daily hours or stick to the standard 8.0h cap.
 - **Temporal Archives**: Create database snapshots and merge history from legacy .db, CSV, or XLS files!
 
 ## 🛠️ Installation (It's about time you did this)
@@ -42,7 +44,6 @@ Because manually calculating hours is a **second-rate** experience. We're here t
    npm start
    ```
    *(Running `npm start` automatically handles the Flask backend for you!)*
-5. **Read the Docs & Wiki**: Check out our [GitHub Wiki](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki) or the [Docs/](Docs/) folder for technical details!
 5. **Read the Docs & Wiki**: Check out our [GitHub Wiki](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki) or the [Docs/](Docs/) folder for technical details!
 6. **Shift Storm**: [READ THE SETUP ORDEAL GUIDE](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Shift-Storm). 
 7. **Spicy FAQ**: [SHIFT STORM FAQ](https://github.com/FriendzoneGuardian/OJT-Tracker/wiki/Shift-Storm-FAQ) (Warning: Selective Language).

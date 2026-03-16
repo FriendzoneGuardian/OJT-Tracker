@@ -18,7 +18,7 @@ SNAPSHOT_DIR = os.path.join(DATA_DIR, 'snapshots')
 if not os.path.exists(SNAPSHOT_DIR):
     os.makedirs(SNAPSHOT_DIR)
 
-VERSION = "1.5.0 (Heat of the Moment)"
+VERSION = "1.6.0 (Clockwork Calibration)"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -30,12 +30,22 @@ class Settings(db.Model):
     target_hours = db.Column(db.Float, default=486.0)
     include_saturday = db.Column(db.Boolean, default=False)
     include_sunday = db.Column(db.Boolean, default=False)
+    allow_overtime = db.Column(db.Boolean, default=False)
+    projection_strategy = db.Column(db.String(20), default='rolling') # 'rolling' or 'manual'
+    manual_speed = db.Column(db.Float, default=8.0)
 
     @classmethod
     def get_settings_obj(cls):
         setting = cls.query.first()
         if not setting:
-            setting = cls(target_hours=486.0, include_saturday=False, include_sunday=False)
+            setting = cls(
+                target_hours=486.0, 
+                include_saturday=False, 
+                include_sunday=False,
+                allow_overtime=False,
+                projection_strategy='rolling',
+                manual_speed=8.0
+            )
             db.session.add(setting)
             db.session.commit()
         return setting
@@ -58,22 +68,70 @@ class OJTEntry(db.Model):
     aftie_in = db.Column(db.String(5))
     aftie_out = db.Column(db.String(5))
     total_hours = db.Column(db.Float, default=0.0)
+    is_night_shift = db.Column(db.Boolean, default=False)
 
-    def calculate_hours(self):
-        def to_minutes(time_str):
-            if not time_str: return 0
-            h, m = map(int, time_str.split(':'))
-            return h * 60 + m
+    def calculate_hours(self, allow_overtime=False):
+        def to_minutes(time_str, normalize_afternoon=False):
+            if not time_str: return None
+            try:
+                h, m = map(int, time_str.split(':'))
+                # Auto-Normalization: If it's a small hour like 1:00 in an afternoon context
+                if normalize_afternoon and h < 10:
+                    h += 12
+                return h * 60 + m
+            except:
+                return None
+        
+        # Determine valid inputs
+        # Normalization is only for standard shifts where 1:00 in afternoon definitely means 13:00.
+        # For Night shifts, we let the crossover logic handle small hours.
+        is_night = getattr(self, 'is_night_shift', False)
         
         m_in = to_minutes(self.morn_in)
         m_out = to_minutes(self.morn_out)
-        a_in = to_minutes(self.aftie_in)
-        a_out = to_minutes(self.aftie_out)
+        a_in = to_minutes(self.aftie_in, normalize_afternoon=not is_night)
+        a_out = to_minutes(self.aftie_out, normalize_afternoon=not is_night)
         
-        m_total = max(0, m_out - m_in)
-        a_total = max(0, a_out - a_in)
+        total_mins = 0
         
-        self.total_hours = (m_total + a_total) / 60.0
+        if is_night:
+            # Night Owl Mode: Find the earliest In and latest Out among provided fields
+            times = [m_in, m_out, a_in, a_out]
+            valid_times = [x for x in times if x is not None]
+            
+            if len(valid_times) >= 2:
+                start_point = valid_times[0]
+                end_point = valid_times[-1]
+                
+                # Midnight crossover detection
+                if end_point < start_point:
+                    total_mins = (end_point + 1440) - start_point
+                else:
+                    total_mins = end_point - start_point
+        else:
+            # Standard Mode with Phantom Fix
+            # Morning block
+            if m_in is not None and m_out is not None:
+                total_mins += max(0, m_out - m_in)
+            
+            # Afternoon block
+            if a_in is not None and a_out is not None:
+                total_mins += max(0, a_out - a_in)
+            
+            # Phantom Logic: If mid-day logs are missing but start and end are given
+            if m_in is not None and a_out is not None and m_out is None and a_in is None:
+                if a_out < m_in: # Edge case walk
+                    total_mins = (a_out + 1440) - m_in
+                else:
+                    total_mins = a_out - m_in
+
+        calculated = float(total_mins) / 60.0
+        
+        # Overtime Cap Logic
+        if not allow_overtime:
+            self.total_hours = min(8.0, calculated)
+        else:
+            self.total_hours = calculated
 
 def cleanup_past_dates():
     today = datetime.now().date()
@@ -84,6 +142,30 @@ def cleanup_past_dates():
 
 with app.app_context():
     db.create_all()
+    
+    # Manual Schema Migration for v1.6.0 (Adding columns if they don't exist)
+    try:
+        from sqlalchemy import text
+        # Settings table
+        cols = db.session.execute(text("PRAGMA table_info(settings)")).fetchall()
+        col_names = [c[1] for c in cols]
+        if 'allow_overtime' not in col_names:
+            db.session.execute(text("ALTER TABLE settings ADD COLUMN allow_overtime BOOLEAN DEFAULT 0"))
+        if 'projection_strategy' not in col_names:
+            db.session.execute(text("ALTER TABLE settings ADD COLUMN projection_strategy VARCHAR(20) DEFAULT 'rolling'"))
+        if 'manual_speed' not in col_names:
+            db.session.execute(text("ALTER TABLE settings ADD COLUMN manual_speed FLOAT DEFAULT 8.0"))
+            
+        # OJTEntry table
+        cols_entry = db.session.execute(text("PRAGMA table_info(ojt_entry)")).fetchall()
+        col_names_entry = [c[1] for c in cols_entry]
+        if 'is_night_shift' not in col_names_entry:
+            db.session.execute(text("ALTER TABLE ojt_entry ADD COLUMN is_night_shift BOOLEAN DEFAULT 0"))
+        
+        db.session.commit()
+    except Exception as e:
+        print(f"Migration Notice: {e}")
+
     cleanup_past_dates()
     # Seed 2026 Philippine Holidays
     if Holiday.query.count() == 0:
@@ -146,7 +228,10 @@ def add_entry():
     entry.morn_out = data.get('morn_out')
     entry.aftie_in = data.get('aftie_in')
     entry.aftie_out = data.get('aftie_out')
-    entry.calculate_hours()
+    entry.is_night_shift = bool(data.get('is_night_shift', False))
+    
+    settings = Settings.get_settings_obj()
+    entry.calculate_hours(allow_overtime=settings.allow_overtime)
     
     db.session.commit()
     return jsonify({'message': 'Success', 'entry_id': entry.id})
@@ -170,46 +255,50 @@ def get_stats():
     avg_per_day = 0
     expected_end = None
     
-    if entries:
+    if settings.projection_strategy == 'manual':
+        avg_per_day = settings.manual_speed
+    elif entries:
         avg_per_day = sum(e.total_hours for e in entries) / len(entries)
-        if avg_per_day > 0:
-            # Iterative projection skipping weekends, holidays, and exclusions
-            holidays = {h.date for h in Holiday.query.all()}
-            exclusions = {x.date for x in ExcludedDate.query.all()}
+    
+    if avg_per_day > 0:
+        # Iterative projection skipping weekends, holidays, and exclusions
+        holidays = {h.date for h in Holiday.query.all()}
+        exclusions = {x.date for x in ExcludedDate.query.all()}
+        
+        non_working_dates = holidays.union(exclusions)
+        
+        # Buffer for ghost days (precision hardening)
+        hours_rem = left - 0.001 
+        curr_date = datetime.now().date()
+        
+        # Limit safely to avoid infinite loops (max 2 years forward)
+        max_days = 730
+        day_count = 0
+        
+        while hours_rem > 0 and day_count < max_days:
+            curr_date += timedelta(days=1)
+            day_count += 1
             
-            non_working_dates = holidays.union(exclusions)
-            
-            hours_rem = left
-            curr_date = datetime.now().date()
-            
-            # Limit safely to avoid infinite loops (max 2 years forward)
-            max_days = 730
-            day_count = 0
-            
-            while hours_rem > 0 and day_count < max_days:
-                curr_date += timedelta(days=1)
-                day_count += 1
-                
-                # Check for weekends (5 = Saturday, 6 = Sunday)
-                is_working_weekend = False
-                if curr_date.weekday() == 5 and settings.include_saturday:
-                    is_working_weekend = True
-                if curr_date.weekday() == 6 and settings.include_sunday:
-                    is_working_weekend = True
+            # Check for weekends (5 = Saturday, 6 = Sunday)
+            is_working_weekend = False
+            if curr_date.weekday() == 5 and settings.include_saturday:
+                is_working_weekend = True
+            if curr_date.weekday() == 6 and settings.include_sunday:
+                is_working_weekend = True
 
-                if curr_date.weekday() >= 5 and not is_working_weekend:
-                    continue
-                
-                # Check for specific non-working dates
-                if curr_date in non_working_dates:
-                    continue
-                
-                hours_rem -= avg_per_day
+            if curr_date.weekday() >= 5 and not is_working_weekend:
+                continue
             
-            if day_count < max_days:
-                expected_end = curr_date.strftime('%Y-%m-%d')
-            else:
-                expected_end = "Projected too far"
+            # Check for specific non-working dates
+            if curr_date in non_working_dates:
+                continue
+            
+            hours_rem -= avg_per_day
+        
+        if day_count < max_days:
+            expected_end = curr_date.strftime('%Y-%m-%d')
+        else:
+            expected_end = "Projected too far"
 
     # Monthly stats
     now = datetime.now()
@@ -227,7 +316,8 @@ def get_stats():
         'prev_month': round(prev_month_hours, 1),
         'target': target_hours,
         'avg_per_day': round(avg_per_day, 1),
-        'expected_end': expected_end
+        'expected_end': expected_end,
+        'projection_strategy': settings.projection_strategy
     })
 
 @app.route('/api/settings', methods=['GET', 'POST'])
@@ -239,12 +329,18 @@ def handle_settings():
         setting.target_hours = float(data.get('target_hours', setting.target_hours))
         setting.include_saturday = bool(data.get('include_saturday', False))
         setting.include_sunday = bool(data.get('include_sunday', False))
+        setting.allow_overtime = bool(data.get('allow_overtime', False))
+        setting.projection_strategy = data.get('projection_strategy', 'rolling')
+        setting.manual_speed = float(data.get('manual_speed', 8.0))
         db.session.commit()
     
     return jsonify({
         'target_hours': setting.target_hours,
         'include_saturday': setting.include_saturday,
-        'include_sunday': setting.include_sunday
+        'include_sunday': setting.include_sunday,
+        'allow_overtime': setting.allow_overtime,
+        'projection_strategy': setting.projection_strategy,
+        'manual_speed': setting.manual_speed
     })
 
 @app.route('/api/holidays', methods=['GET', 'POST'])

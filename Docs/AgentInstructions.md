@@ -16,6 +16,10 @@ Welcome, fellow Agent! This document contains specific instructions for AI codin
     -   User Exclusions (from `ExcludedDate` model)
 3.  **Portability**: Never hardcode absolute paths. Use `os.path.join(BASE_DIR, ...)` to ensure it runs "On Wheels".
 4.  **Auto-Cleanup**: Maintain the `cleanup_past_dates()` function triggered on startup. It keeps the database lean.
+5.  **Clockwork Logic (v1.6.0)**:
+    -   **Time-Walk Detection**: Use the `is_night_shift` flag for overnight calculations to handle midnight crossovers.
+    -   **Auto-Normalization**: In standard modes, assume afternoon hours (1-9) are PM (13-21). Bypassed in Night Mode.
+    -   **Ghost Buffer**: In `get_stats`, we use a `0.001` reduction (`hours_rem = left - 0.001`) to prevent floating-point "ghost days" where the tracker thinks 1 minute remains on a new day.
 
 ## 🎨 UI/UX Guidelines
 - **Dark Mode First**: The theme is AMOLED Black (`bg-zinc-950`).

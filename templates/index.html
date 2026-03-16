@@ -196,7 +196,7 @@
                         <label class="block text-xs text-gray-500 uppercase mb-2">Target OJT Hours</label>
                         <input type="number" id="target_hours" step="0.5" required class="w-full bg-black/5 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-scarlet-500 transition-all tab-able">
                     </div>
-                    <div class="flex gap-4">
+                    <div class="grid grid-cols-2 gap-4">
                         <label class="flex items-center gap-3 cursor-pointer group">
                             <div class="relative">
                                 <input type="checkbox" id="include_saturday" class="sr-only peer">
@@ -212,6 +212,28 @@
                                 <div class="absolute left-1 top-1 w-4 h-4 bg-gray-400 rounded-full transition-all peer-checked:translate-x-4 peer-checked:bg-white"></div>
                             </div>
                             <span class="text-xs text-gray-400 group-hover:text-white transition-colors">Include Suns</span>
+                        </label>
+                    </div>
+
+                    <div class="pt-4 border-t border-white/5 space-y-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 uppercase mb-2">Projection Strategy</label>
+                            <select id="projection_strategy" class="w-full bg-black/5 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-scarlet-500 transition-all cursor-pointer">
+                                <option value="rolling">Rolling Average (14-Day)</option>
+                                <option value="manual">Manual Hourly Speed</option>
+                            </select>
+                        </div>
+                        <div id="manual_speed_container" class="hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                            <label class="block text-xs text-gray-500 uppercase mb-2">Manual Speed (hrs/day)</label>
+                            <input type="number" id="manual_speed" step="0.1" class="w-full bg-black/5 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-scarlet-500 transition-all">
+                        </div>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <div class="relative">
+                                <input type="checkbox" id="allow_overtime" class="sr-only peer">
+                                <div class="w-10 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:bg-amber-600 transition-all"></div>
+                                <div class="absolute left-1 top-1 w-4 h-4 bg-gray-400 rounded-full transition-all peer-checked:translate-x-4 peer-checked:bg-white"></div>
+                            </div>
+                            <span class="text-xs text-gray-400 group-hover:text-white transition-colors">Allow Overtimes (Uncapped)</span>
                         </label>
                     </div>
                     <button type="submit" class="w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl font-bold mt-4 transition-all border border-white/5">Save Settings</button>
@@ -338,8 +360,22 @@
                 </div>
                 <form id="entry-form" class="space-y-4">
                     <div>
-                        <label class="block text-xs text-gray-500 uppercase mb-2">Date (MM/DD/YYYY)</label>
-                        <input type="date" id="date" required class="w-full bg-black/5 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-scarlet-500 transition-all tab-able">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <label class="block text-xs text-gray-500 uppercase mb-2">Date (MM/DD/YYYY)</label>
+                                <input type="date" id="date" required class="w-full bg-black/5 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-scarlet-500 transition-all tab-able">
+                            </div>
+                            <label class="flex flex-col items-center gap-2 cursor-pointer group mt-4">
+                                <span class="text-[10px] text-gray-500 uppercase tracking-tighter group-hover:text-blue-400 transition-colors">Night Owl Duty 🌙</span>
+                                <div class="relative">
+                                    <input type="checkbox" id="is_night_shift" class="sr-only peer">
+                                    <div class="w-12 h-7 bg-white/5 border border-white/10 rounded-full peer peer-checked:bg-indigo-600 transition-all blur-[0.5px] peer-checked:blur-0"></div>
+                                    <div class="absolute left-1 top-1 w-5 h-5 bg-zinc-600 rounded-full transition-all peer-checked:translate-x-5 peer-checked:bg-white flex items-center justify-center">
+                                        <div class="hidden peer-checked:block w-3 h-3 text-indigo-600"><i data-lucide="moon" class="w-3 h-3"></i></div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -434,6 +470,7 @@
             document.getElementById('morn_out').value = entry.morn_out;
             document.getElementById('aftie_in').value = entry.aftie_in;
             document.getElementById('aftie_out').value = entry.aftie_out;
+            document.getElementById('is_night_shift').checked = entry.is_night_shift;
         }
 
         let rawStats = { total_rendered: 0, total_left: 0 };
@@ -475,7 +512,10 @@
             const data = { 
                 target_hours: document.getElementById('target_hours').value,
                 include_saturday: document.getElementById('include_saturday').checked,
-                include_sunday: document.getElementById('include_sunday').checked
+                include_sunday: document.getElementById('include_sunday').checked,
+                allow_overtime: document.getElementById('allow_overtime').checked,
+                projection_strategy: document.getElementById('projection_strategy').value,
+                manual_speed: document.getElementById('manual_speed').value
             };
             await fetch('/api/settings', {
                 method: 'POST',
@@ -484,6 +524,12 @@
             });
             toggleSettings(false);
             fetchStats();
+        };
+
+        // UI Logic for manual speed visibility
+        document.getElementById('projection_strategy').onchange = (e) => {
+            const container = document.getElementById('manual_speed_container');
+            container.classList.toggle('hidden', e.target.value !== 'manual');
         };
 
         async function takeSnapshot() {
@@ -682,6 +728,12 @@
                 document.getElementById('target_hours').value = data.target_hours;
                 document.getElementById('include_saturday').checked = data.include_saturday;
                 document.getElementById('include_sunday').checked = data.include_sunday;
+                document.getElementById('allow_overtime').checked = data.allow_overtime;
+                document.getElementById('projection_strategy').value = data.projection_strategy;
+                document.getElementById('manual_speed').value = data.manual_speed;
+                
+                // Update manual speed visibility
+                document.getElementById('manual_speed_container').classList.toggle('hidden', data.projection_strategy !== 'manual');
             }
         }
 
@@ -753,7 +805,10 @@
             const body = document.getElementById('entries-table-body');
             body.innerHTML = entries.map(e => `
                 <tr class="hover:bg-white/5 transition-colors group">
-                    <td class="px-8 py-5 font-medium">${e.date}</td>
+                    <td class="px-8 py-5 font-medium flex items-center gap-2">
+                        ${e.date}
+                        ${e.is_night_shift ? '<i data-lucide="moon" class="w-3 h-3 text-indigo-400" title="Night Owl Duty"></i>' : ''}
+                    </td>
                     <td class="px-6 py-5 text-gray-400 font-mono">${e.morn_in || '--:--'}</td>
                     <td class="px-6 py-5 text-gray-400 font-mono">${e.morn_out || '--:--'}</td>
                     <td class="px-6 py-5 text-gray-400 font-mono">${e.aftie_in || '--:--'}</td>
@@ -781,7 +836,8 @@
                 morn_in: document.getElementById('morn_in').value,
                 morn_out: document.getElementById('morn_out').value,
                 aftie_in: document.getElementById('aftie_in').value,
-                aftie_out: document.getElementById('aftie_out').value
+                aftie_out: document.getElementById('aftie_out').value,
+                is_night_shift: document.getElementById('is_night_shift').checked
             };
             await fetch('/api/entries', {
                 method: 'POST',
