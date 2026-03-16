@@ -1,4 +1,4 @@
-# 🕰️ OJT-Tracker v1.3.0 (Shell-Shocked)
+# 🕰️ OJT-Tracker v1.4.0 (Temporal Archives)
 
 Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 486 hours_.
 
@@ -12,14 +12,10 @@ Because manually calculating hours is a **second-rate** experience. We're here t
 
 ## 🚀 Features (That don't slack off)
 
-- **Electron Shell**: Now runs as a native desktop application! No more browser tabs cluttering your life.
-- **Entry Management**: Did you make a mistake? No problem. Just **rewind** and edit or delete entries.
-- **Smart Holiday Tracker**: Our **Calendar** modal skips weekends and holidays so your end date doesn't come as a **surprise shock**.
-- **Auto-Cleanup**: The app **cleans up its act** by removing past holidays automatically.
-- **Trajectory Analysis**: Our Actually Ingenious math predicts your **Expected End Date**.
-- **Multi-Modal Support**: Toggle weekends and settings with a **click**.
-- **Excel Export**: Turn your hard work into a spreadsheet faster than you can say **"spreadsheet-tacular"**.
 - **AMOLED Dark Mode**: Because your eyes deserve a **break**, even if you don't.
+- **Temporal Archives**: Create database snapshots and merge history from legacy .db, CSV, or XLS files!
+- **Multi-Format Export**: Export your logs in Excel, CSV (Raw Data), or Text (Summary) formats.
+- **Connection Hotfix**: v1.3.2 standardized loopback communication for 100% reliable shell connectivity.
 
 ## 🛠️ Installation (It's about time you did this)
 

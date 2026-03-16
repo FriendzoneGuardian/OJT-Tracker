@@ -18,8 +18,16 @@ function createWindow() {
         }
     });
 
-    // Load the Flask app
-    mainWindow.loadURL('http://localhost:8080');
+    // Load the Flask app - Using 127.0.0.1 to avoid localhost resolution delays
+    mainWindow.loadURL('http://127.0.0.1:8080');
+
+    // v1.3.2 Hotfix: Retry loading if the connection fails (Flask still booting)
+    mainWindow.webContents.on('did-fail-load', () => {
+        console.log('Connection failed. Retrying in 1s...');
+        setTimeout(() => {
+            if (mainWindow) mainWindow.loadURL('http://127.0.0.1:8080');
+        }, 1000);
+    });
 
     mainWindow.on('closed', function () {
         mainWindow = null;

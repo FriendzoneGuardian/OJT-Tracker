@@ -34,9 +34,20 @@ This document tracks the progress of the OJT-Tracker development.
 - [x] Update README with `venv` activation steps
 - [x] Final Git Push
 
-### Phase 5: Documentation Migration [IN PROGRESS]
+### Phase 5: Documentation Migration [COMPLETED]
 - [x] Create project `Docs/` directory
 - [x] Migrated `implementation_plan.md`
 - [x] Migrated `task_tracker.md`
 - [x] Migrated `walkthrough.md`
 - [x] Agent-Specific Documentation (`AgentInstructions.md`, `AgentContext.md`) [COMPLETED]
+
+### Phase 9: Temporal Archives (v1.4.0) [COMPLETED]
+- [x] v1.3.2 Connection Hotfix (127.0.0.1 standardized)
+- [x] Multi-Format Export (Excel, CSV, TXT)
+- [x] Database Snapshotting (Automated Backups)
+- [x] Import Wizard (History Merging for DB/CSV/XLS)
+
+### Phase 10: Final Polish & Tagging [IN PROGRESS]
+- [/] Update all docs to v1.4.0
+- [ ] Push changes to `v1.4-temporal-archives`
+- [ ] Commit and Tag `v1.4.0`

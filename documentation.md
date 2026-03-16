@@ -46,7 +46,10 @@ The OJT-Tracker is a Flask-based web application designed to help interns and st
 - `GET /api/exclusions`: Fetch all custom exclusions.
 - `POST /api/exclusions`: Add a new exclusion.
 - `DELETE /api/exclusions/<id>`: Remove an exclusion.
-- `GET /api/export`: Downloads the entire log as an `.xlsx` file.
+- `GET /api/export/multi`: Downloads log in `.xlsx`, `.csv`, or `.txt` formats.
+- `POST /api/snapshot`: Creates a timestamped database backup in `data/snapshots/`.
+- `GET /api/snapshots`: Lists all available database snapshots.
+- `POST /api/import`: Merges history from an uploaded `.db`, `.csv`, or `.xlsx` file.
 
 ## Setup & Development (Shell-Shocked)
 
