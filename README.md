@@ -1,6 +1,6 @@
-# 🕰️ OJT-Tracker v1.4.0 (Temporal Archives)
+# 🕰️ OJT-Tracker v1.5.0 (Visuals & Aesthetics)
 
-Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 486 hours_.
+Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 500 hours_.
 
 If you're looking for a way to track your internship hours without losing your mind, you've come to the **right place at the right time**.
 
@@ -12,10 +12,10 @@ Because manually calculating hours is a **second-rate** experience. We're here t
 
 ## 🚀 Features (That don't slack off)
 
-- **AMOLED Dark Mode**: Because your eyes deserve a **break**, even if you don't.
+- **Temporal Heatmaps**: A new Github-style intensity map is now the primary visual tool.
+- **Toggleable Visuals**: Switch between Heatmap and Bar Charts at the click of a button.
+- **AMOLED & Dark Mode**: Pixel-perfect readability hotfixes for dropdowns, selects, and menus.
 - **Temporal Archives**: Create database snapshots and merge history from legacy .db, CSV, or XLS files!
-- **Multi-Format Export**: Export your logs in Excel, CSV (Raw Data), or Text (Summary) formats.
-- **Connection Hotfix**: v1.3.2 standardized loopback communication for 100% reliable shell connectivity.
 
 ## 🛠️ Installation (It's about time you did this)
 

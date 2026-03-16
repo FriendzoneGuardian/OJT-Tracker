@@ -35,7 +35,9 @@ The OJT-Tracker is a Flask-based web application designed to help interns and st
     - Remaining Hours
     - Average Hours per Day
     - Expected Completion Date (based on trajectory)
-- `GET /api/chart`: Returns a base64 encoded PNG of the progress chart.
+- `GET /api/chart`: Returns a base64 encoded PNG of the progress chart or heatmap.
+    - `type`: (`heatmap`, `bar`) - **NEW**. Select visual representation.
+    - `theme`: (`light`, `dark`, `amoled`) - Adjust palette based on theme.
 
 ### Settings, Holidays & Export
 - `GET /api/settings`: Fetch current configuration (e.g., target hours).

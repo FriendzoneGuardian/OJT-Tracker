@@ -18,7 +18,7 @@ SNAPSHOT_DIR = os.path.join(DATA_DIR, 'snapshots')
 if not os.path.exists(SNAPSHOT_DIR):
     os.makedirs(SNAPSHOT_DIR)
 
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -289,30 +289,63 @@ def delete_exclusion(id):
 
 @app.route('/api/chart')
 def get_chart():
-    # Only show last 30 days or current month
-    now = datetime.now()
-    month_start = now.replace(day=1).date()
-    entries = OJTEntry.query.filter(OJTEntry.date >= month_start).order_by(OJTEntry.date).all()
+    chart_type = request.args.get('type', 'heatmap')
+    # Use 60 days for heatmap, or current month for bar
+    limit_days = 60 if chart_type == 'heatmap' else 31
+    start_date = (datetime.now() - timedelta(days=limit_days)).date()
+    
+    entries = OJTEntry.query.filter(OJTEntry.date >= start_date).order_by(OJTEntry.date).all()
     
     if not entries:
         return jsonify({'chart': None})
 
-    data = {
-        'Date': [e.date.strftime('%m-%d') for e in entries],
-        'Hours': [e.total_hours for e in entries]
-    }
-    df = pd.DataFrame(data)
-    
-    # Theme-aware chart (simple logic)
-    is_dark = request.args.get('theme', 'dark') == 'dark'
+    # Theme-aware chart
+    is_dark = request.args.get('theme', 'dark') in ['dark', 'amoled']
     plt.style.use('dark_background' if is_dark else 'default')
     
-    plt.figure(figsize=(10, 4))
-    sns.set_theme(style="whitegrid" if not is_dark else "darkgrid")
-    
-    plot = sns.barplot(x='Date', y='Hours', data=df, color='#cc0000') # Scarlet
-    plot.set_title('Monthly OJT Progress', fontsize=14, pad=20)
-    
+    if chart_type == 'bar':
+        data = {
+            'Date': [e.date.strftime('%m-%d') for e in entries],
+            'Hours': [e.total_hours for e in entries]
+        }
+        df = pd.DataFrame(data)
+        plt.figure(figsize=(10, 4))
+        sns.set_theme(style="whitegrid" if not is_dark else "darkgrid")
+        plot = sns.barplot(x='Date', y='Hours', data=df, color='#cc0000') # Scarlet
+        plot.set_title('OJT Progress (Bar)', fontsize=14, pad=20)
+    else:
+        # Heatmap Logic (Github Style: Weeks vs Days)
+        # We'll map last 8 weeks
+        import numpy as np
+        weeks = 8
+        grid = np.zeros((7, weeks))
+        today = datetime.now().date()
+        # Find start of the window (8 weeks ago, starting on a Sunday)
+        start_of_window = today - timedelta(days=today.weekday() + (7 * (weeks-1)))
+        
+        entry_map = {e.date: e.total_hours for e in entries}
+        
+        for w in range(weeks):
+            for d in range(7):
+                target_date = start_of_window + timedelta(weeks=w, days=d)
+                if target_date in entry_map:
+                    grid[d, w] = entry_map[target_date]
+                elif target_date > today:
+                    grid[d, w] = -1 # Future dates
+
+        plt.figure(figsize=(10, 3))
+        # Custom Scarlet Gradient
+        cmap = sns.dark_palette("#cc0000", as_cmap=True) if is_dark else sns.light_palette("#cc0000", as_cmap=True)
+        
+        # Mask future dates
+        mask = grid == -1
+        
+        plot = sns.heatmap(grid, annot=False, fmt=".1f", cmap=cmap, cbar=True, 
+                           mask=mask, linewidths=.5, linecolor='#111' if is_dark else '#eee',
+                           yticklabels=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+        plot.set_title('Temporal Archive Intensity (Heatmap)', fontsize=12, pad=15)
+        plt.xlabel('Weeks Ago → Today')
+
     img = io.BytesIO()
     plt.savefig(img, format='png', bbox_inches='tight', transparent=True)
     img.seek(0)
