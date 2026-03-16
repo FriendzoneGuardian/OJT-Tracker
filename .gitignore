@@ -33,3 +33,14 @@ brain/
 *.log
 data/snapshots/
 test_ojt_tracker.db
+
+# Testing & Scratch
+tests/
+test_*.py
+*_test.py
+debug_*.py
+live_check*.py
+test_export.py
+.pytest_cache/
+.coverage
+htmlcov/

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OJT-Tracker | Initializing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #09090b; color: #fafafa; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .scarlet-glow { box-shadow: 0 0 20px rgba(204, 0, 0, 0.2); }
+        .bar-animation {
+            width: 0%;
+            animation: load 3s ease-in-out forwards;
+        }
+        @keyframes load {
+            0% { width: 0%; }
+            20% { width: 15%; }
+            50% { width: 60%; }
+            80% { width: 85%; }
+            100% { width: 92%; } /* Hold it here until real load */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen">
+    <div class="text-center w-full max-w-md px-10">
+        <h1 class="text-3xl font-bold mb-2 tracking-tighter text-white">OJT-TRACKER</h1>
+        <p class="text-zinc-500 text-sm mb-8 font-mono">CALIBRATING TEMPORAL ENGINES...</p>
+        
+        <div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden scarlet-glow border border-zinc-800">
+            <div class="h-full bg-red-700 bar-animation"></div>
+        </div>
+        
+        <div id="status" class="mt-4 text-xs text-zinc-600 italic transition-opacity duration-300">
+            "Timing is everything." — FriendzoneGuardian
+        </div>
+    </div>
+
+    <script>
+        const quotes = [
+            "Reticulating Splines... but for Interns.",
+            "Calculating how much sleep you've lost...",
+            "Avoiding the 'Black Screen of Death'...",
+            "Convincing Python that 0.001 equals zero...",
+            "Removing rose gold filters... by 💅 Support's demand.",
+            "Hiding the database from 💅 The Inquirer...",
+            "Calibrating the 'Clockwork' heart...",
+            "Polishing heatmaps until they bleed scarlet...",
+            "Downloading more RAM for the Sidecar...",
+            "Consulting the Ramsey Protocol for sassy advice...",
+            "Teaching the Bat (Night Owl) how to read a clock...",
+            "Normalizing your Afternoon coffee intake...",
+            "Syncing with the Great Grandfather Clock...",
+            "Ignoring boss emails during boot sequence...",
+            "Wait, did I leave the oven on? No, just Flask.",
+            "Optimizing temporal intensity gradients...",
+            "De-bloating your productivity guilt...",
+            "Initializing the 'Vibecoding' buffer...",
+            "Ensuring your internship isn't a simulation..."
+        ];
+
+        const statusEl = document.getElementById('status');
+        
+        function rotateQuote() {
+            statusEl.style.opacity = 0;
+            setTimeout(() => {
+                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                statusEl.textContent = `"${randomQuote}" — The Shell`;
+                statusEl.style.opacity = 1;
+            }, 300);
+        }
+
+        setInterval(rotateQuote, 1800);
+        // Initial random start
+        rotateQuote();
+    </script>
+</body>
+</html>
