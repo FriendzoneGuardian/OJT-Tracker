@@ -30,9 +30,48 @@
             <div class="h-full bg-red-700 bar-animation"></div>
         </div>
         
-        <div id="status" class="mt-4 text-xs text-zinc-600 italic">
+        <div id="status" class="mt-4 text-xs text-zinc-600 italic transition-opacity duration-300">
             "Timing is everything." — FriendzoneGuardian
         </div>
     </div>
+
+    <script>
+        const quotes = [
+            "Reticulating Splines... but for Interns.",
+            "Calculating how much sleep you've lost...",
+            "Avoiding the 'Black Screen of Death'...",
+            "Convincing Python that 0.001 equals zero...",
+            "Removing rose gold filters... by 💅 Support's demand.",
+            "Hiding the database from 💅 The Inquirer...",
+            "Calibrating the 'Clockwork' heart...",
+            "Polishing heatmaps until they bleed scarlet...",
+            "Downloading more RAM for the Sidecar...",
+            "Consulting the Ramsey Protocol for sassy advice...",
+            "Teaching the Bat (Night Owl) how to read a clock...",
+            "Normalizing your Afternoon coffee intake...",
+            "Syncing with the Great Grandfather Clock...",
+            "Ignoring boss emails during boot sequence...",
+            "Wait, did I leave the oven on? No, just Flask.",
+            "Optimizing temporal intensity gradients...",
+            "De-bloating your productivity guilt...",
+            "Initializing the 'Vibecoding' buffer...",
+            "Ensuring your internship isn't a simulation..."
+        ];
+
+        const statusEl = document.getElementById('status');
+        
+        function rotateQuote() {
+            statusEl.style.opacity = 0;
+            setTimeout(() => {
+                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                statusEl.textContent = `"${randomQuote}" — The Shell`;
+                statusEl.style.opacity = 1;
+            }, 300);
+        }
+
+        setInterval(rotateQuote, 1800);
+        // Initial random start
+        rotateQuote();
+    </script>
 </body>
 </html>
