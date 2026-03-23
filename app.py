@@ -18,7 +18,7 @@ SNAPSHOT_DIR = os.path.join(DATA_DIR, 'snapshots')
 if not os.path.exists(SNAPSHOT_DIR):
     os.makedirs(SNAPSHOT_DIR)
 
-VERSION = "1.6.9 (Clockwork Calibration - Hotfix 9)"
+VERSION = "1.7.3 (Time Scavenger - Sync Coverage Fix)"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -147,12 +147,8 @@ class OJTEntry(db.Model):
         else:
             self.total_hours = calculated
 
-def cleanup_past_dates():
-    today = datetime.now().date()
-    # Delete past holidays and exclusions
-    Holiday.query.filter(Holiday.date < today).delete()
-    ExcludedDate.query.filter(ExcludedDate.date < today).delete()
-    db.session.commit()
+# [v1.6.10 Rollback] cleanup_past_dates() was removed to preserve historical context for absence tracking.
+# We no longer "time-travel" delete our past holidays!
 
 with app.app_context():
     print("[BOOT] Phase 1: Validating Database Schema...")
@@ -181,8 +177,8 @@ with app.app_context():
     except Exception as e:
         print(f"Migration Notice: {e}")
 
-    print("[BOOT] Phase 3: Cleaning Temporal Archives...")
-    cleanup_past_dates()
+    print("[BOOT] Phase 3: Preserving Temporal Archives...")
+    # cleanup_past_dates() -> Removed in v1.6.10 for data integrity
     # Seed 2026 Philippine Holidays
     print("[BOOT] Phase 4: Synchronizing Holidays...")
     if Holiday.query.count() == 0:
@@ -386,6 +382,62 @@ def handle_holidays():
     
     holidays = Holiday.query.order_by(Holiday.date).all()
     return jsonify([{'id': h.id, 'date': h.date.strftime('%Y-%m-%d'), 'name': h.name} for h in holidays])
+
+@app.route('/api/holidays/sync', methods=['POST'])
+def sync_holidays():
+    try:
+        data = request.json or {}
+        year = data.get('year', datetime.now().year)
+        
+        import subprocess
+        import sys
+        import json
+        
+        script_path = os.path.join(BASE_DIR, 'scraper.py')
+        result = subprocess.run([sys.executable, script_path, str(year)], capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            return jsonify({'error': 'Scraper failed to execute'}), 500
+            
+        output_lines = result.stdout.strip().split('\n')
+        json_output = None
+        for line in reversed(output_lines):
+            try:
+                json_output = json.loads(line)
+                break
+            except Exception:
+                continue
+                
+        if not json_output or 'error' in json_output:
+            return jsonify({'error': json_output.get('error', 'Unknown error parsing scraper output')}), 500
+            
+        holidays_scraped = json_output.get('holidays', [])
+        added_count = 0
+        
+        for h in holidays_scraped:
+            date_obj = datetime.strptime(h['date'], '%Y-%m-%d').date()
+            # Check for duplicate
+            if not Holiday.query.filter_by(date=date_obj).first():
+                db.session.add(Holiday(date=date_obj, name=h['name']))
+                added_count += 1
+                
+        db.session.commit()
+        return jsonify({'message': f'Successfully synced {added_count} new holidays for {year}.', 'count': added_count})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/cleanup_year', methods=['POST'])
+def cleanup_year():
+    try:
+        today = datetime.now().date()
+        Holiday.query.filter(Holiday.date <= today).delete()
+        ExcludedDate.query.filter(ExcludedDate.date <= today).delete()
+        db.session.commit()
+        return jsonify({'message': 'Year-end sweep complete! Past holidays and exclusions gracefully removed.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/holidays/<int:id>', methods=['DELETE'])
 def delete_holiday(id):

@@ -57,6 +57,11 @@ This document tracks the progress of the OJT-Tracker development.
 - [x] Tag and Release `v1.4.0` ✅
 - [x] Sync Main Repo and Wiki ✅
 
+### Phase 11: Holiday Integrity (v1.6.10) [COMPLETED]
+- [x] Remove destructive `cleanup_past_dates` logic
+- [x] Implement "Legacy Preservation" for historical holiday data
+- [x] Increment version to v1.6.10 🕰️
+
 ## Roadmap Summary
 | Version | Codename | Key Feature |
 |---------|----------|-------------|
@@ -64,3 +69,9 @@ This document tracks the progress of the OJT-Tracker development.
 | v1.2.0 | Trajectory | Smart Calendar & Predictions |
 | v1.3.0 | Shell-Shocked | Electron Desktop Shell |
 | v1.4.0 | Temporal Archives | Snapshots & Import Wizard |
+| v1.5.0 | Visual & Aesthetics | Intensity Heatmaps & AMOLED Fixes |
+| v1.6.0 | Clockwork Calibration | Night Owl mode & Normalization |
+| v1.6.10| Legacy preservation | Post-hoc Holiday consistency |
+| v1.7.0 | Time Scavenger | Selenium-based automatic Philippine Holiday Scraper |
+| v1.7.3 | Holiday Integrity | Hotfixed Scraper date parsing and manual addition logic |
+| Future | Phase 13+ | Import Holidays Function, Hardware Integration, Advanced Automation |

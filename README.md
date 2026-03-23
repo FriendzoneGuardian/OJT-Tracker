@@ -1,4 +1,4 @@
-# 🕰️ OJT-Tracker v1.6.0 "Clockwork Calibration"
+# 🕰️ OJT-Tracker v1.7.3 "Time Scavenger"
 
 Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 486 hours_.
 
@@ -17,6 +17,9 @@ Because manually calculating hours is a **second-rate** experience. We're here t
 - **Projection Calibration**: Switch between Rolling Average and Manual Speed (hrs/day) strategies in Settings.
 - **Temporal Heatmaps**: A GitHub-style intensity map showing work density over the last 8 weeks.
 - **Overtime Architecture**: Global toggle to allow uncapped daily hours or stick to the standard 8.0h cap.
+- **Auto-Sync Holidays (v1.7.0)**: Built-in Selenium scraper to automatically fetch current Philippine holidays from the web.
+- **Year-End Sweep (v1.7.1)**: On December 31st, the app will offer a one-click sweep to clean up past holidays and prepare your calendar for the new year!
+- **Holiday Integrity (v1.7.3)**: Hotfixed date parsing (supports `D MMM` formats) and manual addition logic to ensure zero-loss temporal tracking.
 - **Temporal Archives**: Create database snapshots and merge history from legacy .db, CSV, or XLS files!
 
 ## 🛠️ Installation (It's about time you did this)
