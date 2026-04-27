@@ -1,26 +1,22 @@
-# 🕰️ OJT-Tracker v1.7.3 "Time Scavenger"
+# 🕰️ OJT-Tracker v1.8.0 "Chart Surgeon"
 
 Welcome to the **OJT-Tracker**, the only app that understands that _time flies when you're having fun_, but it _crawls when you're rendering 486 hours_.
 
-If you're looking for a way to track your internship hours without losing your mind, you've come to the **right place at the right time**.
-
-## 🕒 Why use OJT-Tracker?
-
-Because manually calculating hours is a **second-rate** experience. We're here to give you a **hand** (specifically the big one and the little one).
-
-> "I told my boss I needed a raise because I was doing the work of three men. He told me to tell the other two to get back to work. I guess I just didn't have the **timing** right."
+> "I surgically removed Seaborn and replaced it with Chart.js. The patient is doing fine. It's actually faster now." — v1.8.0 Changelog
 
 ## 🚀 Features (That don't slack off)
 
 - **Clockwork Engine**: Refactored logic for Night Owl shifts, Time-Walk crossovers, and Phantom Time fixes.
 - **Auto-Normalization**: Type `1:00` in Afternoon fields and it magically becomes `13:00` (Intelligently disabled for Night Owls).
 - **Projection Calibration**: Switch between Rolling Average and Manual Speed (hrs/day) strategies in Settings.
-- **Temporal Heatmaps**: A GitHub-style intensity map showing work density over the last 8 weeks.
 - **Overtime Architecture**: Global toggle to allow uncapped daily hours or stick to the standard 8.0h cap.
 - **Auto-Sync Holidays (v1.7.0)**: Built-in Selenium scraper to automatically fetch current Philippine holidays from the web.
 - **Year-End Sweep (v1.7.1)**: On December 31st, the app will offer a one-click sweep to clean up past holidays and prepare your calendar for the new year!
 - **Holiday Integrity (v1.7.3)**: Hotfixed date parsing (supports `D MMM` formats) and manual addition logic to ensure zero-loss temporal tracking.
 - **Temporal Archives**: Create database snapshots and merge history from legacy .db, CSV, or XLS files!
+- **Chart.js Analytics (v1.8.0)** ✨: 4 interactive chart views — Area, Progress Tracker (Combo), Monthly Breakdown, and Heatmap — rendered client-side with full hover tooltips.
+- **Thermal Printing (v1.8.0)** 🖨️: Print an official OJT Proof Log on any Epson TM-82X (or Generic/Text printer). Includes monthly breakers, H:MM formatting, and a fun RPG Level Summary.
+- **User Profile (v1.8.0)**: Add your intern name in Settings; it prints on your receipt header.
 
 ## 🛠️ Installation (It's about time you did this)
 
@@ -32,8 +28,6 @@ Because manually calculating hours is a **second-rate** experience. We're here t
    ```bash
    cd OJT-Tracker
    python -m venv venv
-   # Activation is handled automatically by 'npm start' in v1.6.8+
-   # But you still need to install the initial dependencies:
    venv\Scripts\activate
    pip install -r requirements.txt
    npm install
@@ -45,8 +39,6 @@ Because manually calculating hours is a **second-rate** experience. We're here t
 
 ## ⚡ Bootstrap Matrix (Startup Methods)
 
-If the primary method fails, use the following manual fallback plans:
-
 | Method | Plan | Context | Command |
 | :--- | :--- | :--- | :--- |
 | **A: Primary** | **Automated** | Native Desktop App | `npm start` |
@@ -57,17 +49,31 @@ If the primary method fails, use the following manual fallback plans:
 > **Plan B (PowerShell)**: If your shell blocks scripts, run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` first.
 > **Plan C (Standalone)**: Use this if you don't need the Electron shell and prefer access via `http://localhost:8080` in your browser.
 
-3. **For Vibecoders**: If you're an AI agent, read our [Agent Instructions](Docs/AgentInstructions.md) and [Agent Context](Docs/AgentContext.md).
+## 🖨️ Thermal Printing
+
+Print an official proof of your OJT on any Epson TM-82X or Generic/Text printer:
+
+```bash
+python print_time_summary.py
+```
+
+See the full [Thermal Printing Guide](Docs/Wiki/Thermal-Printing.md) for layout details and configuration.
+
+## 📊 Analytics
+
+Four interactive chart views replace the old Seaborn-generated images. See the [Analytics & Charts Guide](Docs/Wiki/Analytics-Charts.md).
+
+## 📚 Documentation
+
+- [Thermal Printing Guide](Docs/Wiki/Thermal-Printing.md)
+- [Analytics & Charts Guide](Docs/Wiki/Analytics-Charts.md)
+- [Release Notes v1.8.0](Docs/release_notes_v1.8.0.md)
+- [Agent Instructions](Docs/AgentInstructions.md) *(for AI agents)*
+- [Agent Context](Docs/AgentContext.md)
 
 ## 🤝 Project Support
 
 Brought to you by **FriendzoneGuardian**. We're here to make sure your OJT journey is **smooth sailing** (or at least better than a leaky canoe).
-
-## 💡 Pro-Tip
-
-Don't worry if the app feels slow at first. It just needs a **minute** to get its **gears** turning.
-
-> "Why did the man sit on his clock? He wanted to be **on time**." (Classic, right?)
 
 ## 📜 License
 

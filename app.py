@@ -3,10 +3,7 @@ from flask import Flask, render_template, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 import io
-import base64
 
 # Ensure portable data storage
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -18,7 +15,7 @@ SNAPSHOT_DIR = os.path.join(DATA_DIR, 'snapshots')
 if not os.path.exists(SNAPSHOT_DIR):
     os.makedirs(SNAPSHOT_DIR)
 
-VERSION = "1.7.3 (Time Scavenger - Sync Coverage Fix)"
+VERSION = "1.8.0 (Chart Surgeon)"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -33,6 +30,7 @@ class Settings(db.Model):
     allow_overtime = db.Column(db.Boolean, default=False)
     projection_strategy = db.Column(db.String(20), default='rolling') # 'rolling' or 'manual'
     manual_speed = db.Column(db.Float, default=8.0)
+    user_name = db.Column(db.String(100), default='')
 
     @classmethod
     def get_settings_obj(cls):
@@ -44,7 +42,8 @@ class Settings(db.Model):
                 include_sunday=False,
                 allow_overtime=False,
                 projection_strategy='rolling',
-                manual_speed=8.0
+                manual_speed=8.0,
+                user_name=''
             )
             db.session.add(setting)
             db.session.commit()
@@ -166,6 +165,8 @@ with app.app_context():
             db.session.execute(text("ALTER TABLE settings ADD COLUMN projection_strategy VARCHAR(20) DEFAULT 'rolling'"))
         if 'manual_speed' not in col_names:
             db.session.execute(text("ALTER TABLE settings ADD COLUMN manual_speed FLOAT DEFAULT 8.0"))
+        if 'user_name' not in col_names:
+            db.session.execute(text("ALTER TABLE settings ADD COLUMN user_name VARCHAR(100) DEFAULT ''"))
             
         # OJTEntry table
         cols_entry = db.session.execute(text("PRAGMA table_info(ojt_entry)")).fetchall()
@@ -359,6 +360,7 @@ def handle_settings():
         setting.allow_overtime = bool(data.get('allow_overtime', False))
         setting.projection_strategy = data.get('projection_strategy', 'rolling')
         setting.manual_speed = float(data.get('manual_speed', 8.0))
+        setting.user_name = str(data.get('user_name', setting.user_name or ''))
         db.session.commit()
     
     return jsonify({
@@ -367,7 +369,8 @@ def handle_settings():
         'include_sunday': setting.include_sunday,
         'allow_overtime': setting.allow_overtime,
         'projection_strategy': setting.projection_strategy,
-        'manual_speed': setting.manual_speed
+        'manual_speed': setting.manual_speed,
+        'user_name': setting.user_name or ''
     })
 
 @app.route('/api/holidays', methods=['GET', 'POST'])
@@ -466,73 +469,85 @@ def delete_exclusion(id):
     db.session.commit()
     return jsonify({'message': 'Deleted'})
 
-@app.route('/api/chart')
-def get_chart():
-    chart_type = request.args.get('type', 'heatmap')
-    # Use 60 days for heatmap, or current month for bar
-    limit_days = 60 if chart_type == 'heatmap' else 31
-    start_date = (datetime.now() - timedelta(days=limit_days)).date()
+@app.route('/api/chart-data')
+def get_chart_data():
+    """Returns raw JSON data for Chart.js rendering on the frontend."""
+    days = int(request.args.get('days', 90))
+    start_date = (datetime.now() - timedelta(days=days)).date()
     
     entries = OJTEntry.query.filter(OJTEntry.date >= start_date).order_by(OJTEntry.date).all()
     
     if not entries:
-        return jsonify({'chart': None})
+        return jsonify({'labels': [], 'hours': [], 'cumulative': [], 'monthly': {}, 'weekday': {}})
 
-    # Theme-aware chart
-    is_dark = request.args.get('theme', 'dark') in ['dark', 'amoled']
-    plt.style.use('dark_background' if is_dark else 'default')
+    # Daily data (for line/bar charts)
+    labels = [e.date.strftime('%m-%d') for e in entries]
+    hours = [round(e.total_hours, 2) for e in entries]
     
-    if chart_type == 'bar':
-        data = {
-            'Date': [e.date.strftime('%m-%d') for e in entries],
-            'Hours': [e.total_hours for e in entries]
-        }
-        df = pd.DataFrame(data)
-        plt.figure(figsize=(10, 4))
-        sns.set_theme(style="whitegrid" if not is_dark else "darkgrid")
-        plot = sns.barplot(x='Date', y='Hours', data=df, color='#cc0000') # Scarlet
-        plot.set_title('OJT Progress (Bar)', fontsize=14, pad=20)
-    else:
-        # Heatmap Logic (Github Style: Weeks vs Days)
-        # We'll map last 8 weeks
-        import numpy as np
-        weeks = 8
-        grid = np.zeros((7, weeks))
-        today = datetime.now().date()
-        # Find start of the window (8 weeks ago, starting on a Sunday)
-        start_of_window = today - timedelta(days=today.weekday() + (7 * (weeks-1)))
-        
-        entry_map = {e.date: e.total_hours for e in entries}
-        
+    # Cumulative running total (for combo chart)
+    # Need ALL entries for accurate cumulative, not just the windowed ones
+    all_entries = OJTEntry.query.order_by(OJTEntry.date).all()
+    cum_total = 0
+    cum_map = {}
+    for e in all_entries:
+        cum_total += e.total_hours
+        cum_map[e.date.strftime('%m-%d')] = round(cum_total, 2)
+    cumulative = [cum_map.get(l, 0) for l in labels]
+    
+    # Monthly aggregation (for horizontal bar)
+    monthly_data = {}
+    for e in all_entries:
+        month_key = e.date.strftime('%b %Y')  # e.g. "Apr 2026"
+        monthly_data[month_key] = round(monthly_data.get(month_key, 0) + e.total_hours, 2)
+    
+    # Weekday aggregation (for polar/radial)
+    weekday_sums = {}
+    weekday_counts = {}
+    day_names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    for e in all_entries:
+        wd = day_names[e.date.weekday()]
+        weekday_sums[wd] = weekday_sums.get(wd, 0) + e.total_hours
+        weekday_counts[wd] = weekday_counts.get(wd, 0) + 1
+    weekday_avg = {d: round(weekday_sums.get(d, 0) / max(weekday_counts.get(d, 1), 1), 2) for d in day_names}
+    
+    # Heatmap grid (8-week GitHub-style)
+    weeks = 8
+    today = datetime.now().date()
+    # Find start: go back to the Monday of (weeks-1) weeks ago
+    start_of_window = today - timedelta(days=today.weekday() + (7 * (weeks - 1)))
+    entry_map = {e.date: e.total_hours for e in all_entries}
+    
+    heatmap_grid = []  # 7 rows (Mon-Sun) x 8 cols (weeks)
+    for d in range(7):
+        row = []
         for w in range(weeks):
-            for d in range(7):
-                target_date = start_of_window + timedelta(weeks=w, days=d)
-                if target_date in entry_map:
-                    grid[d, w] = entry_map[target_date]
-                elif target_date > today:
-                    grid[d, w] = -1 # Future dates
-
-        plt.figure(figsize=(10, 3))
-        # Custom Scarlet Gradient
-        cmap = sns.dark_palette("#cc0000", as_cmap=True) if is_dark else sns.light_palette("#cc0000", as_cmap=True)
-        
-        # Mask future dates
-        mask = grid == -1
-        
-        plot = sns.heatmap(grid, annot=False, fmt=".1f", cmap=cmap, cbar=True, 
-                           mask=mask, linewidths=.5, linecolor='#111' if is_dark else '#eee',
-                           yticklabels=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
-        plot.set_title('Temporal Archive Intensity (Heatmap)', fontsize=12, pad=15)
-        plt.xlabel('Weeks Ago → Today')
-
-    img = io.BytesIO()
-    plt.savefig(img, format='png', bbox_inches='tight', transparent=True)
-    img.seek(0)
+            target_date = start_of_window + timedelta(weeks=w, days=d)
+            if target_date > today:
+                row.append(-1)  # Future
+            elif target_date in entry_map:
+                row.append(round(entry_map[target_date], 2))
+            else:
+                row.append(0)
+        heatmap_grid.append(row)
     
-    chart_url = base64.b64encode(img.getvalue()).decode()
-    plt.close()
+    # Week labels for heatmap x-axis
+    week_labels = []
+    for w in range(weeks):
+        week_start = start_of_window + timedelta(weeks=w)
+        week_labels.append(week_start.strftime('%m/%d'))
     
-    return jsonify({'chart': f"data:image/png;base64,{chart_url}"})
+    settings = Settings.get_settings_obj()
+    
+    return jsonify({
+        'labels': labels,
+        'hours': hours,
+        'cumulative': cumulative,
+        'target': settings.target_hours,
+        'monthly': monthly_data,
+        'weekday': weekday_avg,
+        'heatmap': heatmap_grid,
+        'heatmap_weeks': week_labels,
+    })
 
 @app.route('/api/export')
 def export_entries():

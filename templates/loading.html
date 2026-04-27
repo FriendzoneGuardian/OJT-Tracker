@@ -10,24 +10,37 @@
         .scarlet-glow { box-shadow: 0 0 20px rgba(204, 0, 0, 0.2); }
         .bar-animation {
             width: 0%;
-            animation: load 3s ease-in-out forwards;
+            animation: load 3.5s ease-in-out forwards;
         }
         @keyframes load {
-            0% { width: 0%; }
-            20% { width: 15%; }
-            50% { width: 60%; }
-            80% { width: 85%; }
-            100% { width: 92%; } /* Hold it here until real load */
+            0%   { width: 0%; }
+            10%  { width: 8%; }
+            30%  { width: 35%; }
+            55%  { width: 62%; }
+            75%  { width: 80%; }
+            90%  { width: 88%; }
+            100% { width: 92%; } /* Hold here until real handshake */
+        }
+        #bar-fill {
+            box-shadow: 0 0 8px rgba(220, 38, 38, 0.6);
+            transition: box-shadow 0.5s ease;
+        }
+        #bar-fill.pulse {
+            box-shadow: 0 0 16px rgba(220, 38, 38, 0.9), 0 0 4px rgba(255, 80, 80, 0.5);
+        }
+        #phase-label {
+            transition: opacity 0.4s ease;
         }
     </style>
 </head>
 <body class="flex items-center justify-center h-screen">
     <div class="text-center w-full max-w-md px-10">
-        <h1 class="text-3xl font-bold mb-2 tracking-tighter text-white">OJT-TRACKER</h1>
-        <p class="text-zinc-500 text-sm mb-8 font-mono">CALIBRATING TEMPORAL ENGINES...</p>
+        <h1 class="text-3xl font-bold mb-1 tracking-tighter text-white">OJT-TRACKER</h1>
+        <p class="text-zinc-600 text-xs mb-6 font-mono tracking-widest uppercase">v1.8.0 &mdash; Chart Surgeon</p>
+        <p class="text-zinc-500 text-sm mb-8 font-mono" id="phase-label">CALIBRATING TEMPORAL ENGINES...</p>
         
-        <div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden scarlet-glow border border-zinc-800">
-            <div class="h-full bg-red-700 bar-animation"></div>
+        <div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800 relative" id="bar-track">
+            <div class="h-full bg-red-700 bar-animation rounded-full" id="bar-fill"></div>
         </div>
         
         <div id="status" class="mt-4 text-xs text-zinc-600 italic transition-opacity duration-300">
@@ -55,10 +68,49 @@
             "Optimizing temporal intensity gradients...",
             "De-bloating your productivity guilt...",
             "Initializing the 'Vibecoding' buffer...",
-            "Ensuring your internship isn't a simulation..."
+            "Ensuring your internship isn't a simulation...",
+            // v1.8.0 Chart Surgeon additions
+            "Evicting Seaborn from the premises...",
+            "Installing Chart.js... it's lighter, we promise.",
+            "Drawing scarlet bars on a canvas...",
+            "Loading 4 chart views for your viewing pleasure...",
+            "Calculating your EXP bar. RANK: APPRENTICE.",
+            "Printing your proof of existence on thermal paper...",
+            "Formatting hours to H:MM so math is optional...",
+            "Consulting the RPG Intern Council...",
+            "Checking if you're GRINDING or IDLE today...",
+            "Area charts are cooler than pie charts. Fact.",
+            "Monthly breakdown loading... no spoilers.",
+            "Configuring the 486-hour target. It won't cheat.",
+        ];
+
+        const phases = [
+            "[Phase 1] Validating Database Schema...",
+            "[Phase 2] Running Clockwork Migrations...",
+            "[Phase 3] Preserving Temporal Archives...",
+            "[Phase 4] Synchronizing Holidays...",
+            "[Phase 5] Loading Chart.js Canvas...",
+            "[Phase 6] Warmup Complete. Awaiting Handshake...",
         ];
 
         const statusEl = document.getElementById('status');
+        const phaseEl = document.getElementById('phase-label');
+        const barFill = document.getElementById('bar-fill');
+        
+        let phaseIdx = 0;
+        const phaseInterval = setInterval(() => {
+            if (phaseIdx < phases.length) {
+                phaseEl.style.opacity = 0;
+                setTimeout(() => {
+                    phaseEl.textContent = phases[phaseIdx++];
+                    phaseEl.style.opacity = 1;
+                }, 200);
+            } else {
+                clearInterval(phaseInterval);
+                // Pulse the bar when done
+                barFill.classList.add('pulse');
+            }
+        }, 700);
         
         function rotateQuote() {
             statusEl.style.opacity = 0;

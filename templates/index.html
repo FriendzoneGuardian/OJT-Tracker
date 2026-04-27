@@ -6,9 +6,11 @@
     <title>OJT Hour Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <script src="{{ url_for('static', filename='js/lucide.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
     <style>
         .amoled { --bg-color: #000000; --card-bg: #0a0a0a; }
-        .tab-able:focus { @apply border-scarlet-500 ring-1 ring-scarlet-500; }
+        .tab-able:focus { border-color: #dc2626; outline: 2px solid transparent; outline-offset: 2px; --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color); --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) #dc2626; box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000); }
+        .modal-box { position: relative; z-index: 100; }
         
         /* Readability Hotfix for Dark/AMOLED Dropdowns & Selects */
         .dark select option, .amoled select option {
@@ -30,14 +32,15 @@
             background-color: rgba(255, 255, 255, 0.1);
         }
         .dark #export-dropdown, .amoled #export-dropdown {
-            background: rgba(24, 24, 27, 0.9); /* Zinc-900 with alpha */
+            background: rgba(24, 24, 27, 0.95);
+            color: #f4f4f5; /* Zinc-100 */
         }
         .amoled #export-dropdown {
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.98);
         }
         #export-dropdown {
             background: white;
-            color: #18181b;
+            color: #18181b; /* Zinc-900 */
         }
     </style>
 </head>
@@ -121,17 +124,32 @@
             <div class="flex justify-between items-center mb-10 relative z-50">
                 <div>
                     <h2 class="text-3xl font-bold">Dashboard</h2>
-                    <p class="text-gray-500">Manage and track your 486 hours.</p>
+                    <p class="text-zinc-500 dark:text-zinc-400">Manage and track your 486 hours.</p>
                 </div>
                 <div class="flex gap-4 relative group">
                     <div class="relative inline-block text-left">
                         <button onclick="document.getElementById('export-dropdown').classList.toggle('hidden')" class="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white rounded-2xl font-bold flex items-center gap-2 transition-all">
                             <i data-lucide="download" class="w-5 h-5"></i> Export <i data-lucide="chevron-down" class="w-4 h-4 ml-1"></i>
                         </button>
-                        <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-black/10 dark:border-white/10 z-[100]">
-                            <a href="/api/export/multi?format=xlsx" onclick="this.parentElement.classList.add('hidden')" class="block px-4 py-3 text-xs font-bold hover:bg-white/10 transition-colors flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-green-500"></i> Excel (Professional)</a>
-                            <a href="/api/export/multi?format=csv" onclick="this.parentElement.classList.add('hidden')" class="block px-4 py-3 text-xs font-bold border-t border-white/5 hover:bg-white/10 transition-colors flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-blue-500"></i> CSV (Raw Data)</a>
-                            <a href="/api/export/multi?format=txt" onclick="this.parentElement.classList.add('hidden')" class="block px-4 py-3 text-xs font-bold border-t border-white/5 hover:bg-white/10 transition-colors flex items-center gap-2"><i data-lucide="file" class="w-4 h-4 text-zinc-500"></i> Text (Summary)</a>
+                        <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-black/10 dark:border-white/10 z-[100] backdrop-blur-md">
+                            <a href="/api/export/multi?format=xlsx" onclick="this.parentElement.classList.add('hidden')" class="block px-4 py-4 text-sm font-bold text-inherit hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-3">
+                                <div class="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="file-spreadsheet" class="w-4 h-4 text-green-500"></i>
+                                </div>
+                                Excel (Professional)
+                            </a>
+                            <a href="/api/export/multi?format=csv" onclick="this.parentElement.classList.add('hidden')" class="block px-4 py-4 text-sm font-bold text-inherit border-t border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-3">
+                                <div class="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="file-text" class="w-4 h-4 text-blue-500"></i>
+                                </div>
+                                CSV (Raw Data)
+                            </a>
+                            <a href="/api/export/multi?format=txt" onclick="this.parentElement.classList.add('hidden')" class="block px-4 py-4 text-sm font-bold text-inherit border-t border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-3">
+                                <div class="w-8 h-8 bg-zinc-500/10 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="file" class="w-4 h-4 text-zinc-500"></i>
+                                </div>
+                                Text (Summary)
+                            </a>
                         </div>
                     </div>
                     <button onclick="toggleModal(true)" class="px-6 py-3 bg-scarlet-600 hover:bg-scarlet-700 text-white rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-scarlet-600/20">
@@ -149,7 +167,7 @@
             </div>
             <div class="glass rounded-3xl overflow-visible shadow-xl border border-white/5 mb-10 relative z-0">
                 <table class="w-full text-left">
-                    <thead class="bg-black/5 dark:bg-white/5 text-gray-500 text-xs uppercase tracking-wider">
+                    <thead class="bg-black/5 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider">
                         <tr>
                             <th class="px-8 py-4">Date</th>
                             <th class="px-6 py-4">Morning In</th>
@@ -169,12 +187,15 @@
             <!-- Analytics Chart -->
             <div id="chart-container" class="glass rounded-3xl p-6 mb-8 border border-white/5 hidden max-w-4xl mx-auto flex flex-col gap-4">
                 <div class="flex justify-between items-center px-2">
-                    <h4 id="chart-title" class="text-xs font-bold text-gray-500 uppercase tracking-widest">Temporal Intensity</h4>
+                    <h4 id="chart-title" class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Daily Hours (Area)</h4>
                     <button onclick="toggleChartType()" class="text-[10px] font-bold text-scarlet-500 hover:text-scarlet-400 uppercase tracking-tighter transition-colors flex items-center gap-1">
-                        <i data-lucide="repeat" class="w-3 h-3"></i> <span id="toggle-label">Switch to Bar Chart</span>
+                        <i data-lucide="repeat" class="w-3 h-3"></i> <span id="toggle-label">Next View</span>
                     </button>
                 </div>
-                <img id="stats-chart" class="w-full h-auto rounded-xl opacity-90 hover:opacity-100 transition-opacity">
+                <div style="position:relative; height:280px;">
+                    <canvas id="stats-chart"></canvas>
+                </div>
+                <canvas id="heatmap-canvas" class="w-full rounded-xl" style="display:none; height:180px;"></canvas>
             </div>
         </main>
     </div>
@@ -190,14 +211,18 @@
     </script>
 
     <!-- Settings Modal (Cleaned up) -->
-    <div id="settings-modal" onclick="if(event.target === this) toggleSettings(false)" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div id="settings-modal" onclick="if(event.target === this) toggleSettings(false)" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 modal-box">
             <div class="p-8">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold">Settings</h3>
                     <button onclick="toggleSettings(false)" class="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"><i data-lucide="x"></i></button>
                 </div>
                 <form id="settings-form" class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-500 uppercase mb-2">Your Name (OJT Intern)</label>
+                        <input type="text" id="user_name" placeholder="e.g. Juan Dela Cruz" class="w-full bg-black/5 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-scarlet-500 transition-all tab-able">
+                    </div>
                     <div>
                         <label class="block text-xs text-gray-500 uppercase mb-2">Target OJT Hours</label>
                         <input type="number" id="target_hours" step="0.5" required class="w-full bg-black/5 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-scarlet-500 transition-all tab-able">
@@ -263,8 +288,8 @@
     </div>
 
     <!-- Import Modal -->
-    <div id="import-modal" onclick="if(event.target === this) toggleImport(false)" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div id="import-modal" onclick="if(event.target === this) toggleImport(false)" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 modal-box">
             <div class="p-8 text-center">
                 <div class="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                     <i data-lucide="upload-cloud" class="w-8 h-8 text-blue-500"></i>
@@ -289,8 +314,8 @@
     </div>
 
     <!-- Calendar Modal (Dedicated, Large, Resized) -->
-    <div id="calendar-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-zinc-900 w-[70%] h-[70%] min-w-[900px] min-h-[600px] rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div id="calendar-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-zinc-900 w-[70%] h-[70%] min-w-[900px] min-h-[600px] rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 modal-box">
             <div class="flex h-full">
                 <!-- Left Section: Add New -->
                 <div class="w-1/3 p-8 border-r border-white/5 overflow-y-auto">
@@ -363,8 +388,8 @@
     </div>
 
     <!-- Entry Modal -->
-    <div id="entry-modal" onclick="if(event.target === this) toggleModal(false)" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div id="entry-modal" onclick="if(event.target === this) toggleModal(false)" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 modal-box">
             <div class="p-8">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold">Log OJT Hours</h3>
@@ -528,7 +553,8 @@
                 include_sunday: document.getElementById('include_sunday').checked,
                 allow_overtime: document.getElementById('allow_overtime').checked,
                 projection_strategy: document.getElementById('projection_strategy').value,
-                manual_speed: document.getElementById('manual_speed').value
+                manual_speed: document.getElementById('manual_speed').value,
+                user_name: document.getElementById('user_name').value
             };
             await fetch('/api/settings', {
                 method: 'POST',
@@ -806,6 +832,7 @@
                 document.getElementById('allow_overtime').checked = data.allow_overtime;
                 document.getElementById('projection_strategy').value = data.projection_strategy;
                 document.getElementById('manual_speed').value = data.manual_speed;
+                document.getElementById('user_name').value = data.user_name || '';
                 
                 // Update manual speed visibility
                 document.getElementById('manual_speed_container').classList.toggle('hidden', data.projection_strategy !== 'manual');
@@ -823,30 +850,301 @@
             document.getElementById('expected-end').innerText = rawStats.expected_end || '--';
         }
 
-        let currentChartType = localStorage.getItem('chartType') || 'heatmap';
+        const chartModes = ['line', 'combo', 'monthly', 'heatmap'];
+        let currentChartIdx = parseInt(localStorage.getItem('chartIdx') || '0');
+        let currentChartType = chartModes[currentChartIdx];
+        let chartInstance = null;
+        let cachedChartData = null;
+
+        const chartLabels = {
+            line:    'Daily Hours (Area)',
+            combo:   'Progress Tracker',
+            monthly: 'Monthly Breakdown',
+            heatmap: 'Temporal Intensity'
+        };
+        const chartNextLabel = {
+            line:    'Progress Tracker →',
+            combo:   'Monthly View →',
+            monthly: 'Heatmap →',
+            heatmap: 'Area Chart →'
+        };
 
         function toggleChartType() {
-            currentChartType = currentChartType === 'heatmap' ? 'bar' : 'heatmap';
-            localStorage.setItem('chartType', currentChartType);
-            fetchChart();
+            currentChartIdx = (currentChartIdx + 1) % chartModes.length;
+            currentChartType = chartModes[currentChartIdx];
+            localStorage.setItem('chartIdx', currentChartIdx);
+            renderChart();
         }
 
         async function fetchChart() {
-            const theme = localStorage.getItem('theme') || 'dark';
-            const res = await fetch(`/api/chart?theme=${theme}&type=${currentChartType}`);
-            const data = await res.json();
+            try {
+                const res = await fetch('/api/chart-data?days=90');
+                cachedChartData = await res.json();
+                renderChart();
+            } catch(e) {
+                console.warn('Chart fetch failed:', e);
+            }
+        }
+
+        function getChartColors() {
+            const isDark = document.documentElement.classList.contains('dark');
+            return {
+                scarlet: '#dc2626',
+                scarletFill: isDark ? 'rgba(220,38,38,0.15)' : 'rgba(220,38,38,0.1)',
+                amber: '#f59e0b',
+                amberFill: isDark ? 'rgba(245,158,11,0.2)' : 'rgba(245,158,11,0.1)',
+                grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                text: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                bg: isDark ? '#0a0a0a' : '#ffffff',
+                cellBg: isDark ? '#1a1a1a' : '#f0f0f0',
+                isDark
+            };
+        }
+
+        function renderChart() {
+            const data = cachedChartData;
             const container = document.getElementById('chart-container');
-            const img = document.getElementById('stats-chart');
             const label = document.getElementById('toggle-label');
             const title = document.getElementById('chart-title');
-            
-            if (data.chart) {
-                img.src = data.chart;
-                container.classList.remove('hidden');
-                label.innerText = currentChartType === 'heatmap' ? 'Switch to Bar Chart' : 'Switch to Heatmap';
-                title.innerText = currentChartType === 'heatmap' ? 'Temporal Intensity' : 'Progress Bar View';
-            } else {
+            const chartCanvas = document.getElementById('stats-chart');
+            const heatmapCanvas = document.getElementById('heatmap-canvas');
+
+            if (!data || (!data.labels.length && !Object.keys(data.monthly).length)) {
                 container.classList.add('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            title.innerText = chartLabels[currentChartType];
+            label.innerText = chartNextLabel[currentChartType];
+            
+            const colors = getChartColors();
+
+            // Destroy old Chart.js instance
+            if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+            if (currentChartType === 'heatmap') {
+                chartCanvas.parentElement.style.display = 'none';
+                heatmapCanvas.style.display = 'block';
+                renderHeatmap(heatmapCanvas, data, colors);
+                return;
+            } else {
+                chartCanvas.parentElement.style.display = 'block';
+                heatmapCanvas.style.display = 'none';
+            }
+
+            const ctx = chartCanvas.getContext('2d');
+            const baseOpts = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 600, easing: 'easeOutQuart' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: colors.isDark ? '#1a1a1a' : '#fff',
+                        titleColor: colors.isDark ? '#fff' : '#000',
+                        bodyColor: colors.isDark ? '#aaa' : '#555',
+                        borderColor: colors.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        padding: 10,
+                    }
+                },
+                scales: {
+                    x: { grid: { color: colors.grid }, ticks: { color: colors.text, maxRotation: 45, font: { size: 9 } } },
+                    y: { grid: { color: colors.grid }, ticks: { color: colors.text, font: { size: 10 } }, beginAtZero: true }
+                }
+            };
+
+            if (currentChartType === 'line') {
+                // Option 1: Line + Area Fill
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Hours',
+                            data: data.hours,
+                            borderColor: colors.scarlet,
+                            backgroundColor: colors.scarletFill,
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointBackgroundColor: colors.scarlet,
+                            pointHoverRadius: 6,
+                        }]
+                    },
+                    options: baseOpts
+                });
+            } else if (currentChartType === 'combo') {
+                // Option 2: Bar + Cumulative Line (Dual Axis)
+                const comboOpts = JSON.parse(JSON.stringify(baseOpts));
+                comboOpts.plugins.legend = { display: true, labels: { color: colors.text, font: { size: 10 }, boxWidth: 12, padding: 15 } };
+                comboOpts.scales.y = { ...comboOpts.scales.y, position: 'left', title: { display: true, text: 'Daily Hours', color: colors.text, font: { size: 10 } } };
+                comboOpts.scales.y2 = {
+                    position: 'right',
+                    grid: { drawOnChartArea: false },
+                    ticks: { color: colors.text, font: { size: 10 } },
+                    title: { display: true, text: 'Total Hours', color: colors.text, font: { size: 10 } },
+                    beginAtZero: true,
+                    suggestedMax: data.target
+                };
+
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'Daily Hours',
+                                type: 'bar',
+                                data: data.hours,
+                                backgroundColor: colors.scarlet + '99',
+                                borderColor: colors.scarlet,
+                                borderWidth: 1,
+                                borderRadius: 3,
+                                yAxisID: 'y',
+                                order: 2,
+                            },
+                            {
+                                label: 'Cumulative',
+                                type: 'line',
+                                data: data.cumulative,
+                                borderColor: colors.amber,
+                                backgroundColor: colors.amberFill,
+                                fill: true,
+                                tension: 0.3,
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                yAxisID: 'y2',
+                                order: 1,
+                            },
+                            {
+                                label: `Target (${data.target}h)`,
+                                type: 'line',
+                                data: data.labels.map(() => data.target),
+                                borderColor: 'rgba(100,100,100,0.4)',
+                                borderDash: [6, 4],
+                                borderWidth: 1,
+                                pointRadius: 0,
+                                yAxisID: 'y2',
+                                order: 0,
+                            }
+                        ]
+                    },
+                    options: comboOpts
+                });
+            } else if (currentChartType === 'monthly') {
+                // Option 5: Horizontal Bar (Monthly Breakdown)
+                const months = Object.keys(data.monthly);
+                const values = Object.values(data.monthly);
+                const monthOpts = JSON.parse(JSON.stringify(baseOpts));
+                monthOpts.indexAxis = 'y';
+                monthOpts.scales.x = { ...monthOpts.scales.x, beginAtZero: true, title: { display: true, text: 'Total Hours', color: colors.text, font: { size: 10 } } };
+                monthOpts.scales.y = { ...monthOpts.scales.y, ticks: { color: colors.text, font: { size: 11, weight: 'bold' } } };
+
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Hours',
+                            data: values,
+                            backgroundColor: values.map((_, i) => {
+                                const hue = 0; // scarlet
+                                const sat = 70 + (i * 5);
+                                const light = 40 + (i * 3);
+                                return `hsl(${hue}, ${sat}%, ${light}%)`;
+                            }),
+                            borderColor: colors.scarlet,
+                            borderWidth: 1,
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: monthOpts
+                });
+            }
+        }
+
+        function renderHeatmap(canvas, data, colors) {
+            const grid = data.heatmap;
+            const weekLabels = data.heatmap_weeks;
+            if (!grid || !grid.length) return;
+
+            const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+            const rows = 7, cols = grid[0].length;
+            const cellSize = 28;
+            const gap = 4;
+            const labelW = 40;
+            const headerH = 20;
+            const totalW = labelW + cols * (cellSize + gap);
+            const totalH = headerH + rows * (cellSize + gap) + 10;
+
+            canvas.width = totalW * 2; // 2x for retina
+            canvas.height = totalH * 2;
+            canvas.style.width = totalW + 'px';
+            canvas.style.height = totalH + 'px';
+
+            const ctx = canvas.getContext('2d');
+            ctx.scale(2, 2);
+            ctx.clearRect(0, 0, totalW, totalH);
+
+            // Week labels (top)
+            ctx.fillStyle = colors.text;
+            ctx.font = '9px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            for (let w = 0; w < cols; w++) {
+                ctx.fillText(weekLabels[w] || '', labelW + w * (cellSize + gap) + cellSize / 2, 12);
+            }
+
+            // Day labels (left) + cells
+            ctx.textAlign = 'right';
+            for (let d = 0; d < rows; d++) {
+                const y = headerH + d * (cellSize + gap);
+                ctx.fillStyle = colors.text;
+                ctx.font = '10px system-ui, sans-serif';
+                ctx.fillText(dayLabels[d], labelW - 6, y + cellSize / 2 + 4);
+
+                for (let w = 0; w < cols; w++) {
+                    const val = grid[d][w];
+                    const x = labelW + w * (cellSize + gap);
+
+                    if (val === -1) {
+                        // Future: empty/faded
+                        ctx.fillStyle = colors.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
+                    } else if (val === 0) {
+                        ctx.fillStyle = colors.cellBg;
+                    } else {
+                        // Scarlet intensity: 0 -> dim, 8+ -> full
+                        const intensity = Math.min(val / 8, 1);
+                        const alpha = 0.15 + intensity * 0.85;
+                        ctx.fillStyle = `rgba(220, 38, 38, ${alpha})`;
+                    }
+
+                    // Rounded rect
+                    const r = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(x + r, y);
+                    ctx.lineTo(x + cellSize - r, y);
+                    ctx.quadraticCurveTo(x + cellSize, y, x + cellSize, y + r);
+                    ctx.lineTo(x + cellSize, y + cellSize - r);
+                    ctx.quadraticCurveTo(x + cellSize, y + cellSize, x + cellSize - r, y + cellSize);
+                    ctx.lineTo(x + r, y + cellSize);
+                    ctx.quadraticCurveTo(x, y + cellSize, x, y + cellSize - r);
+                    ctx.lineTo(x, y + r);
+                    ctx.quadraticCurveTo(x, y, x + r, y);
+                    ctx.fill();
+
+                    // Show hours in cell if > 0
+                    if (val > 0) {
+                        ctx.fillStyle = val > 4 ? '#fff' : (colors.isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)');
+                        ctx.font = 'bold 9px system-ui, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(val.toFixed(1), x + cellSize / 2, y + cellSize / 2 + 3);
+                        ctx.textAlign = 'right'; // Reset for day labels
+                    }
+                }
             }
         }
 
