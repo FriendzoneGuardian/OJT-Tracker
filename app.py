@@ -15,7 +15,7 @@ SNAPSHOT_DIR = os.path.join(DATA_DIR, 'snapshots')
 if not os.path.exists(SNAPSHOT_DIR):
     os.makedirs(SNAPSHOT_DIR)
 
-VERSION = "1.9.0 (Transmutation Engine)"
+VERSION = "1.9.1 (Transmutation Engine Refined)"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -734,7 +734,7 @@ def import_data():
         'skipped': skipped_count
     })
 
-# --- AUTO UPDATE SYSTEM (v1.9.0) ---
+# --- AUTO UPDATE SYSTEM (v1.9.1) ---
 
 @app.route('/api/update/check')
 def check_update():
@@ -892,6 +892,8 @@ def calculate_transmutation():
         a_end = time_to_mins(ruleset.get('afternoon_end') or ruleset.get('standard_shift_end'))
         
         penalty_rate = ruleset.get('penalty_per_15_mins_minutes', 0)
+        grace = ruleset.get('grace_period_minutes', 0)
+        fixed_daily = ruleset.get('fixed_daily_deduction_minutes', 0)
         
         for e in entries:
             if getattr(e, 'is_night_shift', False):
@@ -913,9 +915,11 @@ def calculate_transmutation():
             if a_in and a_start and a_in > a_start: diffs.append(a_in - a_start)
             if a_out and a_end and a_out < a_end: diffs.append(a_end - a_out)
             
-            day_penalty = 0
+            # Start with fixed daily deduction (Snack Breaks / Downtime)
+            day_penalty = fixed_daily
+            
             for diff in diffs:
-                if diff > 0:
+                if diff > grace:
                     if penalty_rate > 0:
                         # 1-15 = 1 unit, 16-30 = 2 units
                         units = (diff + 14) // 15

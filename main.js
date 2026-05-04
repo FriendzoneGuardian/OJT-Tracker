@@ -7,10 +7,10 @@ let flaskProcess;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
+        width: 1400,
+        height: 900,
         backgroundColor: '#09090b', // zinc-950 matching the UI
-        title: 'OJT-Tracker v1.9.0',
+        title: 'OJT-Tracker v1.9.1',
         icon: path.join(__dirname, 'static/favicon.ico'),
         show: false, // Don't show until ready-to-show to prevent white flicker
         webPreferences: {
@@ -122,7 +122,7 @@ app.on('quit', () => {
     if (flaskProcess) flaskProcess.kill();
 });
 
-// v1.9.0 Auto-Update Restart Handler
+// v1.9.1 Auto-Update Restart Handler
 ipcMain.on('restart-app', () => {
     if (flaskProcess) flaskProcess.kill();
     app.relaunch();

@@ -26,3 +26,6 @@ typing_extensions==4.15.0
 tzdata==2025.3
 Werkzeug==3.1.6
 XlsxWriter==3.2.9
+python-escpos==3.0a8
+pywin32==311
+setuptools==69.5.1

@@ -12,7 +12,7 @@ from escpos.printer import Win32Raw
 # ─── CONFIG ────────────────────────────────────────
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "ojt_tracker.db")
 TARGET_HOURS = 486.0  # Default; overridden by DB settings if available
-VERSION = "1.7.3"
+VERSION = "1.9.1"
 LINE = "-" * 42
 
 
@@ -154,6 +154,7 @@ def print_summary():
 
     try:
         p = Win32Raw(printer_name)
+        p.open()
     except Exception as e:
         print(f"[ERR] Printer connection failed for '{printer_name}': {e}")
         return
@@ -185,6 +186,16 @@ def print_summary():
     p.text(f"{progress_bar(data['pct'])} {data['pct']:.1f}%\n")
     p.text(LINE + "\n")
 
+    # Pre-load ruleset for the table
+    ruleset_path = os.path.join(os.path.dirname(__file__), "data", "ruleset.json")
+    ruleset = None
+    if os.path.exists(ruleset_path):
+        try:
+            import json
+            with open(ruleset_path, "r", encoding="utf-8") as f:
+                ruleset = json.load(f)
+        except: pass
+
     # ─── FULL HISTORY (Proof Table) ───────────────
     if data["recent"]:
         # Pre-calculate monthly stats for breakers
@@ -199,8 +210,11 @@ def print_summary():
         p.set(align="center", bold=True)
         p.text("OFFICIAL OJT LOG\n")
         p.set(align="left", bold=True)
-        # Header expanded for 42 cols
-        p.text("DATE           IN       OUT      H:MM\n")
+        # Header adjusted for -D (Deductions) if ruleset exists
+        if ruleset:
+            p.text("DATE          IN    OUT    H:MM   -D\n")
+        else:
+            p.text("DATE           IN       OUT      H:MM\n")
         p.set(bold=False)
         
         current_month = None
@@ -215,12 +229,8 @@ def print_summary():
                 m_name = dt_obj.strftime("%b").upper()
                 m_num = dt_obj.month
                 m_info = monthly_stats[month_key]
-                # Format: -----[MAR (3)] ---- [13/14d]---
-                # User used 13/14d, maybe worked/total days? 
-                # I'll use [TotalHrs / Days] to keep it consistent with previous info
                 m_stat_str = f"[{m_info['hrs']:.1f}h/{m_info['days']}d]"
                 sep_text = f"---[{m_name} ({m_num})] -- {m_stat_str}---"
-                
                 p.set(align="center")
                 p.text(sep_text.center(42, "-") + "\n")
                 p.set(align="left")
@@ -232,40 +242,124 @@ def print_summary():
             a_out = row[4] or row[2] or "--:--" 
             hrs = row[5]
             hm_str = format_hm(hrs)
+
+            # Daily Transmutation Calculation for the table row
+            d_str = ""
+            if ruleset:
+                def time_to_mins(t_str):
+                    if not t_str: return None
+                    try: h, m = map(int, t_str.split(':')); return h * 60 + m
+                    except: return None
+
+                m_start = time_to_mins(ruleset.get('morning_start') or ruleset.get('standard_shift_start'))
+                m_end = time_to_mins(ruleset.get('morning_end'))
+                a_start = time_to_mins(ruleset.get('afternoon_start'))
+                a_end = time_to_mins(ruleset.get('afternoon_end') or ruleset.get('standard_shift_end'))
+                penalty_rate = ruleset.get('penalty_per_15_mins_minutes', 0)
+                grace = ruleset.get('grace_period_minutes', 0)
+                fixed_daily = ruleset.get('fixed_daily_deduction_minutes', 0)
+
+                # Normalize/Check
+                cur_m_in = time_to_mins(row[1])
+                cur_m_out = time_to_mins(row[2])
+                cur_a_in = time_to_mins(row[3])
+                cur_a_out = time_to_mins(row[4])
+                if cur_a_in is not None and cur_a_in < 12*60: cur_a_in += 12*60
+                if cur_a_out is not None and cur_a_out < 12*60: cur_a_out += 12*60
+
+                diffs = []
+                if cur_m_in and m_start and cur_m_in > m_start: diffs.append(cur_m_in - m_start)
+                if cur_m_out and m_end and cur_m_out < m_end: diffs.append(m_end - cur_m_out)
+                if cur_a_in and a_start and cur_a_in > a_start: diffs.append(cur_a_in - a_start)
+                if cur_a_out and a_end and cur_a_out < a_end: diffs.append(a_end - cur_a_out)
+
+                day_penalty = fixed_daily
+                for diff in diffs:
+                    if diff > grace and penalty_rate > 0:
+                        day_penalty += ((diff + 14) // 15) * penalty_rate
+                
+                if day_penalty > 0:
+                    d_str = f"{day_penalty/60.0:.1f}h"
             
-            # Column widths: 12 (date), 10 (in), 10 (out), 10 (hrs) = 42 total
-            p.text(f"{date_str:<12}   {m_in:>5}    {a_out:>5}   {hm_str:>6}\n")
+            if ruleset:
+                # Column widths: 10 (date), 6 (in), 6 (out), 8 (hrs), 12 (deduct) = 42 total
+                p.text(f"{date_str:<10}    {m_in:>5} {a_out:>5}   {hm_str:>5}   {d_str:>4}\n")
+            else:
+                p.text(f"{date_str:<12}   {m_in:>5}    {a_out:>5}   {hm_str:>6}\n")
             
         p.text(LINE + "\n")
 
-    # ─── GAME-LIKE SUMMARY (Fun but Formal) ───────
-    p.text(LINE + "\n")
-    p.set(align="center", bold=True)
-    p.text(">>> LEVEL SUMMARY <<<\n")
-    p.set(align="left", bold=False)
-    
-    # Logic for Ranks
-    pct = data["pct"]
-    if pct >= 100: rank = "GODLIKE"
-    elif pct >= 90: rank = "MASTER"
-    elif pct >= 75: rank = "SENIOR"
-    elif pct >= 50: rank = "JUNIOR"
-    elif pct >= 25: rank = "APPRENTICE"
-    else: rank = "NOVICE"
+    # ─── TRANSMUTATION SUMMARY (Policy Deductions) ──────
+    if ruleset:
+        try:
+            p.set(align="center", bold=True)
+            p.text(">>> TRANSMUTATION LOG <<<\n")
+            p.set(align="left", bold=False)
 
-    # Status check
-    has_today = False
-    if data["recent"]:
-        last_date = data["recent"][-1][0]
-        if last_date == datetime.now().strftime("%Y-%m-%d"):
-            has_today = True
-    
-    status = "GRINDING" if has_today else "IDLE"
+            def time_to_mins(t_str):
+                if not t_str: return None
+                try:
+                    h, m = map(int, t_str.split(':'))
+                    return h * 60 + m
+                except: return None
 
-    p.text(f"  RANK   : {rank}\n")
-    p.text(f"  STATUS : {status}\n")
-    p.text(f"  EXP    : {pct:.1f}% COMPLETE\n")
-    p.text(LINE + "\n")
+            m_start = time_to_mins(ruleset.get('morning_start') or ruleset.get('standard_shift_start'))
+            m_end = time_to_mins(ruleset.get('morning_end'))
+            a_start = time_to_mins(ruleset.get('afternoon_start'))
+            a_end = time_to_mins(ruleset.get('afternoon_end') or ruleset.get('standard_shift_end'))
+            penalty_rate = ruleset.get('penalty_per_15_mins_minutes', 0)
+            grace = ruleset.get('grace_period_minutes', 0)
+            fixed_daily = ruleset.get('fixed_daily_deduction_minutes', 0)
+
+            total_deduct_mins = 0
+            for row in data["recent"]:
+                # date, m_in, m_out, a_in, a_out, hrs
+                m_in = time_to_mins(row[1])
+                m_out = time_to_mins(row[2])
+                a_in = time_to_mins(row[3])
+                a_out = time_to_mins(row[4])
+
+                if a_in is not None and a_in < 12*60: a_in += 12*60
+                if a_out is not None and a_out < 12*60: a_out += 12*60
+
+                diffs = []
+                if m_in and m_start and m_in > m_start: diffs.append(m_in - m_start)
+                if m_out and m_end and m_out < m_end: diffs.append(m_end - m_out)
+                if a_in and a_start and a_in > a_start: diffs.append(a_in - a_start)
+                if a_out and a_end and a_out < a_end: diffs.append(a_end - a_out)
+
+                day_penalty = fixed_daily
+                for diff in diffs:
+                    if diff > grace and penalty_rate > 0:
+                        units = (diff + 14) // 15
+                        day_penalty += units * penalty_rate
+                total_deduct_mins += day_penalty
+
+            deduct_hrs = total_deduct_mins / 60.0
+            adjusted_hrs = data["total_hrs"] - deduct_hrs
+            
+            p.text(f"  Penalty Rate: {penalty_rate}m / 15m block\n")
+            if fixed_daily > 0:
+                p.text(f"  Fixed/Day   : {fixed_daily}m (Break/Down)\n")
+            p.text(f"  TOTAL TRANSMUTATION: -{deduct_hrs:.1f} hrs\n")
+            p.set(bold=True)
+            p.text(f"  CREDITED    : {adjusted_hrs:.1f} hrs\n")
+            p.set(bold=False)
+            
+            # Progress based on Adjusted
+            adj_pct = (adjusted_hrs / data["target"] * 100) if data["target"] > 0 else 0
+            p.text(f"  ACTUAL EXP  : {adj_pct:.1f}% COMPLETE\n")
+            p.text(LINE + "\n")
+        except Exception as e:
+            p.text(f"[Ruleset Error: {str(e)[:20]}]\n")
+    else:
+        # Fallback to simple Rank if no ruleset
+        p.text(LINE + "\n")
+        p.set(align="center", bold=True)
+        p.text(">>> PROGRESS SUMMARY <<<\n")
+        p.set(align="left", bold=False)
+        p.text(f"  EXP: {data['pct']:.1f}% COMPLETE\n")
+        p.text(LINE + "\n")
 
     # ─── FOOTER ───────────────────────────────────
     p.set(align="center")
