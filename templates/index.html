@@ -111,6 +111,9 @@
             </div>
 
             <div class="mt-auto space-y-4">
+                <button onclick="toggleTransmuteModal(true)" class="w-full py-3 bg-scarlet-600 hover:bg-scarlet-700 text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-scarlet-600/20">
+                    <i data-lucide="wand-2" class="w-4 h-4"></i> Transmute Lates
+                </button>
                 <div class="flex items-center justify-between p-2 bg-black/10 dark:bg-white/5 rounded-2xl border border-white/5">
                     <button onclick="setTheme('light')" class="p-2 rounded-xl hover:bg-white/10 transition-colors"><i data-lucide="sun" class="w-5 h-5"></i></button>
                     <button onclick="setTheme('dark')" class="p-2 rounded-xl hover:bg-white/10 transition-colors"><i data-lucide="moon" class="w-5 h-5"></i></button>
@@ -126,6 +129,28 @@
                     <h2 class="text-3xl font-bold">Dashboard</h2>
                     <p class="text-zinc-500 dark:text-zinc-400">Manage and track your 486 hours.</p>
                 </div>
+
+                <!-- Update Banner -->
+                <div id="update-banner" class="hidden absolute top-full left-0 mt-4 w-full px-6 py-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-between gap-4 z-40 backdrop-blur-md">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="arrow-up-circle" class="w-5 h-5 text-amber-400 shrink-0"></i>
+                        <div>
+                            <p class="text-sm font-bold text-amber-400">Update Available</p>
+                            <p id="update-desc" class="text-xs text-zinc-400">A new version is ready.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="applyUpdate()" id="update-btn"
+                            class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-xl transition-all">
+                            Update Now
+                        </button>
+                        <button onclick="document.getElementById('update-banner').classList.add('hidden')"
+                            class="px-3 py-2 bg-white/5 hover:bg-white/10 text-xs rounded-xl transition-all">
+                            Later
+                        </button>
+                    </div>
+                </div>
+
                 <div class="flex gap-4 relative group">
                     <div class="relative inline-block text-left">
                         <button onclick="document.getElementById('export-dropdown').classList.toggle('hidden')" class="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white rounded-2xl font-bold flex items-center gap-2 transition-all">
@@ -203,7 +228,7 @@
     <!-- Unified Modal Controller -->
     <script>
         function closeAllModals() {
-            ['settings-modal', 'calendar-modal', 'entry-modal', 'import-modal'].forEach(id => {
+            ['settings-modal', 'calendar-modal', 'entry-modal', 'import-modal', 'transmute-modal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
@@ -444,6 +469,39 @@
                         <button type="submit" class="flex-[2] py-4 bg-scarlet-600 hover:bg-scarlet-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-scarlet-600/20">Save Entry</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transmute Modal -->
+    <div id="transmute-modal" onclick="if(event.target === this) toggleTransmuteModal(false)" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 modal-box">
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 bg-scarlet-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i data-lucide="wand-2" class="w-8 h-8 text-scarlet-500"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Transmute Data</h3>
+                <p class="text-sm text-gray-500 mb-6 px-4">Calculate penalties based on your Company Ruleset.</p>
+                
+                <div class="mb-6">
+                    <button onclick="document.getElementById('ruleset-file').click()" class="w-full py-3 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="file-json" class="w-4 h-4"></i> Import Ruleset (.md/.json)
+                    </button>
+                    <input type="file" id="ruleset-file" class="hidden" accept=".md,.json" onchange="handleRulesetUpload(event)">
+                    <p id="ruleset-status" class="text-[10px] text-gray-500 mt-2">No ruleset imported yet.</p>
+                </div>
+
+                <div class="p-6 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/5 mb-6">
+                    <span class="text-[10px] text-gray-500 uppercase tracking-widest block mb-2">Total Deductions</span>
+                    <span id="transmute-result" class="text-4xl font-bold text-scarlet-500">0.0h</span>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="toggleTransmuteModal(false)" class="flex-1 py-4 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 rounded-2xl font-bold transition-all">Close</button>
+                    <button id="transmute-calc-btn" onclick="calculateTransmutation()" class="flex-[2] py-4 bg-scarlet-600 hover:bg-scarlet-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-scarlet-600/20 flex justify-center items-center gap-2">
+                        <i data-lucide="calculator" class="w-4 h-4"></i> Calculate
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1225,6 +1283,118 @@
 
         fetchStats();
         fetchEntries();
+        checkForUpdates();
+
+        // --- Transmute Logic ---
+        function toggleTransmuteModal(show) {
+            if (show) closeAllModals();
+            document.getElementById('transmute-modal').classList.toggle('hidden', !show);
+            if (show) {
+                // Keep the last text, no reset needed.
+            }
+        }
+
+        async function handleRulesetUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            document.getElementById('ruleset-status').innerText = 'Importing...';
+            
+            try {
+                const res = await fetch('/api/ruleset/import', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('ruleset-status').innerText = 'Ruleset active!';
+                    document.getElementById('ruleset-status').classList.add('text-green-500');
+                    document.getElementById('ruleset-status').classList.remove('text-gray-500', 'text-red-500');
+                } else {
+                    document.getElementById('ruleset-status').innerText = 'Error: ' + data.error;
+                    document.getElementById('ruleset-status').classList.add('text-red-500');
+                }
+            } catch (err) {
+                document.getElementById('ruleset-status').innerText = 'Import failed.';
+            }
+        }
+
+        async function calculateTransmutation() {
+            const btn = document.getElementById('transmute-calc-btn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...';
+            lucide.createIcons();
+            
+            try {
+                const res = await fetch('/api/transmute');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('transmute-result').innerText = data.total_deductions_hours + 'h';
+                    document.getElementById('ruleset-status').innerText = 'Calculated successfully.';
+                    document.getElementById('ruleset-status').classList.remove('text-red-500');
+                } else {
+                    document.getElementById('ruleset-status').innerText = 'Error: ' + data.error;
+                    document.getElementById('ruleset-status').classList.add('text-red-500');
+                }
+            } catch (err) {
+                document.getElementById('ruleset-status').innerText = 'Calculation failed.';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                lucide.createIcons();
+            }
+        }
+
+        // --- Auto Update Logic ---
+        async function checkForUpdates() {
+            try {
+                const res = await fetch('/api/update/check');
+                const data = await res.json();
+                if (data.needs_update) {
+                    const banner = document.getElementById('update-banner');
+                    document.getElementById('update-desc').innerText =
+                        `v${data.current} → v${data.latest} is available on GitHub.`;
+                    banner.classList.remove('hidden');
+                }
+            } catch(e) {
+                // Silently fail — offline or rate-limited
+            }
+        }
+
+        async function applyUpdate() {
+            document.getElementById('update-btn').disabled = true;
+            document.getElementById('update-modal').classList.remove('hidden');
+            const logEl = document.getElementById('update-log');
+            logEl.innerHTML = '<div class="text-zinc-500">Starting update...</div>';
+
+            const res = await fetch('/api/update/apply', { method: 'POST' });
+            const data = await res.json();
+
+            logEl.innerHTML = data.log.map(l =>
+                `<div class="${l.startsWith('❌') ? 'text-red-400' : l.startsWith('⚠️') ? 'text-amber-400' : 'text-zinc-300'}">${l}</div>`
+            ).join('');
+
+            if (data.success) {
+                document.getElementById('update-done-msg').classList.remove('hidden');
+                // Tell Electron to restart after 3 seconds
+                setTimeout(() => {
+                    if (window.__electron_ipc) window.__electron_ipc.send('restart-app');
+                    else location.reload(); // Fallback for browser mode
+                }, 3000);
+            }
+        }
     </script>
+
+    <!-- Update Progress Modal -->
+    <div id="update-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="bg-zinc-900 w-full max-w-lg rounded-3xl shadow-2xl p-8">
+            <h3 class="text-xl font-bold mb-4">🔄 Applying Update...</h3>
+            <div id="update-log" class="font-mono text-xs text-zinc-400 bg-black/40 rounded-xl p-4 max-h-64 overflow-y-auto space-y-1"></div>
+            <p id="update-done-msg" class="hidden mt-4 text-sm text-green-400 font-bold">
+                ✅ Update complete! The app will restart in a moment...
+            </p>
+        </div>
+    </div>
 </body>
 </html>

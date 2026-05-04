@@ -15,7 +15,7 @@ SNAPSHOT_DIR = os.path.join(DATA_DIR, 'snapshots')
 if not os.path.exists(SNAPSHOT_DIR):
     os.makedirs(SNAPSHOT_DIR)
 
-VERSION = "1.8.0 (Chart Surgeon)"
+VERSION = "1.9.0 (Transmutation Engine)"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -733,6 +733,212 @@ def import_data():
         'imported': imported_count,
         'skipped': skipped_count
     })
+
+# --- AUTO UPDATE SYSTEM (v1.9.0) ---
+
+@app.route('/api/update/check')
+def check_update():
+    """Checks GitHub tags for a newer version."""
+    import urllib.request, json, re
+
+    try:
+        url = "https://api.github.com/repos/FriendzoneGuardian/OJT-Tracker/tags"
+        req = urllib.request.Request(url, headers={'User-Agent': 'OJT-Tracker'})
+        with urllib.request.urlopen(req, timeout=5) as r:
+            tags = json.loads(r.read())
+
+        if not tags:
+            return jsonify({'needs_update': False, 'error': 'No tags found'})
+
+        latest_tag = tags[0]['name']  # e.g. "v1.9.0"
+        
+        # Strip 'v' prefix and compare to local VERSION semver
+        local_semver = re.findall(r'\d+\.\d+\.\d+', VERSION)
+        remote_semver = re.findall(r'\d+\.\d+\.\d+', latest_tag)
+
+        if not local_semver or not remote_semver:
+            return jsonify({'needs_update': False, 'error': 'Bad version format'})
+
+        local_parts  = tuple(int(x) for x in local_semver[0].split('.'))
+        remote_parts = tuple(int(x) for x in remote_semver[0].split('.'))
+        needs_update = remote_parts > local_parts
+
+        return jsonify({
+            'needs_update': needs_update,
+            'current': local_semver[0],
+            'latest':  remote_semver[0],
+            'tag': latest_tag,
+            'release_url': f"https://github.com/FriendzoneGuardian/OJT-Tracker/releases/tag/{latest_tag}"
+        })
+    except Exception as e:
+        return jsonify({'needs_update': False, 'error': str(e)})
+
+@app.route('/api/update/apply', methods=['POST'])
+def apply_update():
+    """
+    Safely applies a git pull update:
+    1. Snapshots the DB
+    2. git pull
+    3. pip install -r requirements.txt
+    Returns a log of all steps for the frontend to display.
+    """
+    import subprocess, shutil
+    from datetime import datetime
+
+    log = []
+    BASE = os.path.abspath(os.path.dirname(__file__))
+
+    try:
+        # Step 1: Pre-update DB backup
+        db_src = os.path.join(BASE, 'data', 'ojt_tracker.db')
+        snap_dir = os.path.join(BASE, 'data', 'snapshots')
+        os.makedirs(snap_dir, exist_ok=True)
+        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_path = os.path.join(snap_dir, f'pre_update_{ts}.db')
+        if os.path.exists(db_src):
+            shutil.copy2(db_src, backup_path)
+            log.append(f'✅ DB backed up → snapshots/pre_update_{ts}.db')
+        else:
+            log.append('⚠️ No DB found to backup (fresh install?)')
+
+        # Step 2: git fetch + pull
+        for cmd in [
+            ['git', 'fetch', 'origin'],
+            ['git', 'pull', 'origin', 'master', '--ff-only'],
+        ]:
+            result = subprocess.run(cmd, cwd=BASE, capture_output=True, text=True, timeout=60)
+            log.append(f'$ {" ".join(cmd)}')
+            if result.stdout.strip():
+                log.append(result.stdout.strip())
+            if result.returncode != 0:
+                log.append(f'❌ FAILED: {result.stderr.strip()}')
+                return jsonify({'success': False, 'log': log})
+            log.append('✅ OK')
+
+        # Step 3: pip install (in case new dependencies were added)
+        pip_path = os.path.join(BASE, 'venv', 'Scripts', 'pip.exe')
+        if not os.path.exists(pip_path):
+            pip_path = os.path.join(BASE, 'venv', 'bin', 'pip')
+        req_path = os.path.join(BASE, 'requirements.txt')
+        result = subprocess.run(
+            [pip_path, 'install', '-r', req_path, '-q'],
+            cwd=BASE, capture_output=True, text=True, timeout=120
+        )
+        log.append('$ pip install -r requirements.txt')
+        if result.returncode == 0:
+            log.append('✅ Dependencies up to date')
+        else:
+            log.append(f'⚠️ pip warning: {result.stderr.strip()[:200]}')
+
+        return jsonify({'success': True, 'log': log})
+
+    except Exception as e:
+        log.append(f'❌ Exception: {str(e)}')
+        return jsonify({'success': False, 'log': log})
+
+@app.route('/api/ruleset/import', methods=['POST'])
+def import_ruleset():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+        
+    try:
+        content = file.read().decode('utf-8')
+        import re, json
+        match = re.search(r'```json\s+(.*?)\s+```', content, re.DOTALL)
+        if not match:
+            return jsonify({'error': 'No JSON configuration block found in the markdown.'}), 400
+            
+        ruleset_json = match.group(1)
+        ruleset_data = json.loads(ruleset_json)
+        
+        ruleset_path = os.path.join(DATA_DIR, 'ruleset.json')
+        with open(ruleset_path, 'w', encoding='utf-8') as f:
+            f.write(ruleset_json)
+            
+        return jsonify({'success': True, 'message': 'Ruleset imported successfully.', 'data': ruleset_data})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/transmute', methods=['GET'])
+def calculate_transmutation():
+    try:
+        ruleset_path = os.path.join(DATA_DIR, 'ruleset.json')
+        if not os.path.exists(ruleset_path):
+            return jsonify({'error': 'No ruleset imported yet.'}), 400
+            
+        import json
+        with open(ruleset_path, 'r', encoding='utf-8') as f:
+            ruleset = json.load(f)
+            
+        entries = OJTEntry.query.order_by(OJTEntry.date).all()
+        total_deductions_mins = 0
+        
+        def time_to_mins(t_str):
+            if not t_str: return None
+            try:
+                h, m = map(int, t_str.split(':'))
+                # Handle standard 12h/24h ambiguity for afternoon
+                return h * 60 + m
+            except:
+                return None
+                
+        # Support both old and new schema
+        m_start = time_to_mins(ruleset.get('morning_start') or ruleset.get('standard_shift_start'))
+        m_end = time_to_mins(ruleset.get('morning_end'))
+        a_start = time_to_mins(ruleset.get('afternoon_start'))
+        a_end = time_to_mins(ruleset.get('afternoon_end') or ruleset.get('standard_shift_end'))
+        
+        penalty_rate = ruleset.get('penalty_per_15_mins_minutes', 0)
+        
+        for e in entries:
+            if getattr(e, 'is_night_shift', False):
+                continue
+                
+            m_in = time_to_mins(e.morn_in)
+            m_out = time_to_mins(e.morn_out)
+            a_in = time_to_mins(e.aftie_in)
+            a_out = time_to_mins(e.aftie_out)
+            
+            # Normalize afternoon times (1:00 -> 13:00)
+            if a_in is not None and a_in < 12*60: a_in += 12*60
+            if a_out is not None and a_out < 12*60: a_out += 12*60
+            
+            # Check 4 potential penalty points
+            diffs = []
+            if m_in and m_start and m_in > m_start: diffs.append(m_in - m_start)
+            if m_out and m_end and m_out < m_end: diffs.append(m_end - m_out)
+            if a_in and a_start and a_in > a_start: diffs.append(a_in - a_start)
+            if a_out and a_end and a_out < a_end: diffs.append(a_end - a_out)
+            
+            day_penalty = 0
+            for diff in diffs:
+                if diff > 0:
+                    if penalty_rate > 0:
+                        # 1-15 = 1 unit, 16-30 = 2 units
+                        units = (diff + 14) // 15
+                        day_penalty += units * penalty_rate
+                    else:
+                        # Fallback to legacy tiered lists if rate isn't defined
+                        for r in ruleset.get('late_penalties', []):
+                            if r['min'] <= diff <= r['max']:
+                                day_penalty += r['deduct_minutes']
+                        for r in ruleset.get('undertime_penalties', []):
+                            if r['min'] <= diff <= r['max']:
+                                day_penalty += r['deduct_minutes']
+            
+            total_deductions_mins += day_penalty
+                
+        total_deductions_hours = round(total_deductions_mins / 60.0, 2)
+        
+        return jsonify({
+            'success': True,
+            'total_deductions_hours': total_deductions_hours
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     # Stealth mode for Electron: Suppress banner and logging if not in debug

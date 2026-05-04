@@ -10,7 +10,6 @@ from datetime import datetime
 from escpos.printer import Win32Raw
 
 # ─── CONFIG ────────────────────────────────────────
-PRINTER_NAME = "Generic / Text Only"
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "ojt_tracker.db")
 TARGET_HOURS = 486.0  # Default; overridden by DB settings if available
 VERSION = "1.7.3"
@@ -101,16 +100,62 @@ def progress_bar(pct, width=20):
     return "[" + "#" * filled + "." * (width - filled) + "]"
 
 
+def get_best_printer():
+    import subprocess
+    import json
+    
+    fallback = "Generic / Text Only"
+    
+    try:
+        # Get printers via PowerShell
+        cmd = 'powershell -NoProfile -Command "Get-CimInstance Win32_Printer | Select-Object Name, Default | ConvertTo-Json"'
+        result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+        out = result.stdout.strip()
+        
+        if not out:
+            return fallback
+            
+        printers = json.loads(out)
+        if isinstance(printers, dict):
+            printers = [printers]  # Handle single printer case
+            
+        # 1. Check Default Printer
+        for p in printers:
+            if p.get("Default"):
+                name = p.get("Name", "").upper()
+                # Ignore virtual printers
+                if "PDF" not in name and "XPS" not in name and "ONENOTE" not in name:
+                    print(f"[*] Selected Default Printer: {p['Name']}")
+                    return p["Name"]
+                    
+        # 2. Check for any ECPOS-Capable / Thermal Printers
+        pos_keywords = ["POS", "THERMAL", "BIXOLON", "EPSON", "TM-", "ZJIANG", "XP-", "XPRINTER", "RECEIPT"]
+        for p in printers:
+            name = p.get("Name", "").upper()
+            if any(kw in name for kw in pos_keywords):
+                print(f"[*] Found POS/Thermal Printer: {p['Name']}")
+                return p["Name"]
+                
+    except Exception as e:
+        print(f"[WARN] Printer auto-detect failed: {e}")
+        
+    # 3. Hard Coded Fallback
+    print(f"[*] Using Hard Coded Printer: {fallback}")
+    return fallback
+
+
 def print_summary():
     data = fetch_summary()
     if not data:
         print("[ERR] Could not fetch summary.")
         return
 
+    printer_name = get_best_printer()
+
     try:
-        p = Win32Raw(PRINTER_NAME)
+        p = Win32Raw(printer_name)
     except Exception as e:
-        print(f"[ERR] Printer: {e}")
+        print(f"[ERR] Printer connection failed for '{printer_name}': {e}")
         return
 
     now = datetime.now()

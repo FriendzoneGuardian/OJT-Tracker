@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 
@@ -10,12 +10,13 @@ function createWindow() {
         width: 1200,
         height: 800,
         backgroundColor: '#09090b', // zinc-950 matching the UI
-        title: 'OJT-Tracker v1.8.0',
+        title: 'OJT-Tracker v1.9.0',
         icon: path.join(__dirname, 'static/favicon.ico'),
         show: false, // Don't show until ready-to-show to prevent white flicker
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js')
         }
     });
 
@@ -119,4 +120,11 @@ app.on('activate', function () {
 
 app.on('quit', () => {
     if (flaskProcess) flaskProcess.kill();
+});
+
+// v1.9.0 Auto-Update Restart Handler
+ipcMain.on('restart-app', () => {
+    if (flaskProcess) flaskProcess.kill();
+    app.relaunch();
+    app.exit(0);
 });
