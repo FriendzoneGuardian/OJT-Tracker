@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OJT Proof of Time</title>
+    <style>
+        @page {
+            margin: 0;
+            size: 80mm auto;
+        }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            width: 80mm;
+            margin: 0;
+            padding: 5mm;
+            font-size: 12px;
+            background: white;
+            color: black;
+        }
+        .center { text-align: center; }
+        .bold { font-weight: bold; }
+        .line { border-top: 1px dashed black; margin: 5px 0; }
+        .header { font-size: 16px; margin-bottom: 2px; }
+        .version { font-size: 10px; margin-bottom: 10px; }
+        .stats { margin: 10px 0; line-height: 1.4; }
+        .log-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+        .log-table th { border-bottom: 1px solid black; text-align: left; padding: 2px 0; }
+        .log-table td { padding: 2px 0; }
+        .breaker { text-align: center; font-weight: bold; margin: 10px 0; font-size: 10px; }
+        .footer { margin-top: 20px; text-align: center; font-size: 10px; border-top: 1px solid black; padding-top: 10px; }
+        
+        @media print {
+            body { width: 80mm; }
+            .no-print { display: none; }
+        }
+        
+        .no-print {
+            background: #eee;
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ccc;
+        }
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button class="btn" onclick="window.print()">Print via Browser</button>
+        <button class="btn" style="background: #dc2626;" onclick="triggerThermal()">Print via Thermal Script</button>
+    </div>
+
+    <div class="center bold header">OJT TRACKER</div>
+    <div class="center version">{{ version }}</div>
+    <div class="center">Time Summary</div>
+    {% if settings.user_name %}
+        <div class="center bold">{{ settings.user_name }}</div>
+    {% endif %}
+    <div class="center">{{ now.strftime('%b %d, %Y %I:%M %p') }}</div>
+    
+    <div class="line"></div>
+    
+    <div class="stats">
+        <div>Target     : {{ "%.0f"|format(settings.target_hours) }} hrs</div>
+        <div>Rendered   : {{ "%.1f"|format(total_hrs) }} hrs ({{ total_days }}d)</div>
+        <div>Remaining  : {{ "%.1f"|format(remaining) }} hrs</div>
+    </div>
+    
+    <div class="line"></div>
+    
+    <div class="center bold">OFFICIAL OJT LOG</div>
+    <table class="log-table">
+        <thead>
+            <tr>
+                <th>DATE</th>
+                <th>IN</th>
+                <th>OUT</th>
+                <th style="text-align: right;">H:MM</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set ns = namespace(current_month='') %}
+            {% for entry in entries %}
+                {% set month_key = entry.date.strftime('%Y-%m') %}
+                {% if ns.current_month != month_key %}
+                    {% set ns.current_month = month_key %}
+                    {% set stats = monthly_stats[month_key] %}
+                    <tr>
+                        <td colspan="4" class="breaker">
+                            ---[{{ stats.name }} ({{ stats.month }})] -- [{{ "%.1f"|format(stats.hrs) }}h/{{ stats.days }}d]---
+                        </td>
+                    </tr>
+                {% endif %}
+                <tr>
+                    <td>{{ entry.date.strftime('%m-%d-%y') }}</td>
+                    <td>{{ entry.morn_in or '--:--' }}</td>
+                    <td>{{ entry.aftie_out or entry.morn_out or '--:--' }}</td>
+                    <td style="text-align: right;">{{ entry.total_hours|int }}:{{ "%02d"|format(((entry.total_hours - entry.total_hours|int) * 60)|round|int) }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="line"></div>
+    
+    <div class="footer">
+        <div class="bold">>>> LEVEL SUMMARY <<<</div>
+        {% set pct = (total_hrs / settings.target_hours * 100) if settings.target_hours > 0 else 0 %}
+        {% if pct < 25 %}
+            <div>Rank: NOVICE</div>
+        {% elif pct < 50 %}
+            <div>Rank: JUNIOR</div>
+        {% elif pct < 75 %}
+            <div>Rank: SENIOR</div>
+        {% else %}
+            <div>Rank: MASTER</div>
+        {% endif %}
+        <div>Status: {{ 'GRINDING' if total_hrs > 0 else 'IDLE' }}</div>
+        <div>Progress: {{ "%.1f"|format(pct) }}%</div>
+    </div>
+
+    <script>
+        async function triggerThermal() {
+            try {
+                const res = await fetch('/api/print/thermal', { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert("Print successful!\n" + data.output);
+                } else if (data.error === 'MISSING_DEPENDENCY') {
+                    if (confirm("Thermal printer drivers (python-escpos) are missing on this system. Would you like to auto-install them now?\n\nThis may take a minute.")) {
+                        installDrivers();
+                    }
+                } else {
+                    alert("Print failed: " + (data.error || data.message));
+                }
+            } catch (e) {
+                alert("Error connecting to server: " + e);
+            }
+        }
+
+        async function installDrivers() {
+            const btn = document.querySelector('button[onclick="triggerThermal()"]');
+            const oldText = btn.innerText;
+            btn.innerText = "Installing... Please wait";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/print/install-drivers', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Success! Drivers installed. You can now try printing again.");
+                } else {
+                    alert("Installation failed:\n" + data.error);
+                }
+            } catch (e) {
+                alert("Error during installation: " + e);
+            } finally {
+                btn.innerText = oldText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

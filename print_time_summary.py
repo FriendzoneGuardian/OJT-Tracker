@@ -7,12 +7,15 @@ Designed to be ECONOMICAL: compact layout, minimal whitespace, short paper.
 import os
 import sqlite3
 from datetime import datetime
-from escpos.printer import Win32Raw
+try:
+    from escpos.printer import Win32Raw
+except ImportError:
+    Win32Raw = None
 
 # ─── CONFIG ────────────────────────────────────────
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "ojt_tracker.db")
 TARGET_HOURS = 486.0  # Default; overridden by DB settings if available
-VERSION = "1.9.1"
+VERSION = "1.9.2"
 LINE = "-" * 42
 
 
@@ -107,40 +110,55 @@ def get_best_printer():
     fallback = "Generic / Text Only"
     
     try:
-        # Get printers via PowerShell
-        cmd = 'powershell -NoProfile -Command "Get-CimInstance Win32_Printer | Select-Object Name, Default | ConvertTo-Json"'
+        # Get printers via PowerShell (More robust query)
+        cmd = 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-CimInstance Win32_Printer | Select-Object Name, Default | ConvertTo-Json"'
         result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
         out = result.stdout.strip()
         
         if not out:
+            print("[!] No printers found via PowerShell.")
             return fallback
             
-        printers = json.loads(out)
+        try:
+            printers = json.loads(out)
+        except json.JSONDecodeError:
+            print("[!] Failed to parse printer JSON.")
+            return fallback
+
         if isinstance(printers, dict):
-            printers = [printers]  # Handle single printer case
+            printers = [printers]
             
-        # 1. Check Default Printer
+        # Virtual printer keywords to ignore
+        virtual_kws = ["PDF", "XPS", "ONENOTE", "FAX", "DOCUMENT WRITER", "SEND TO"]
+
+        # Priority 1: The designated Default Printer
         for p in printers:
             if p.get("Default"):
                 name = p.get("Name", "").upper()
-                # Ignore virtual printers
-                if "PDF" not in name and "XPS" not in name and "ONENOTE" not in name:
-                    print(f"[*] Selected Default Printer: {p['Name']}")
+                if not any(kw in name for kw in virtual_kws):
+                    print(f"[*] Strategy 1: Using Default Printer -> {p['Name']}")
                     return p["Name"]
                     
-        # 2. Check for any ECPOS-Capable / Thermal Printers
-        pos_keywords = ["POS", "THERMAL", "BIXOLON", "EPSON", "TM-", "ZJIANG", "XP-", "XPRINTER", "RECEIPT"]
+        # Priority 2: Any printer with Thermal/POS keywords
+        pos_keywords = ["POS", "THERMAL", "BIXOLON", "EPSON", "TM-", "ZJIANG", "XP-", "XPRINTER", "RECEIPT", "E300", "T82"]
         for p in printers:
             name = p.get("Name", "").upper()
             if any(kw in name for kw in pos_keywords):
-                print(f"[*] Found POS/Thermal Printer: {p['Name']}")
+                print(f"[*] Strategy 2: Found Thermal/POS match -> {p['Name']}")
+                return p["Name"]
+
+        # Priority 3: Any "Generic" printer
+        for p in printers:
+            name = p.get("Name", "").upper()
+            if "GENERIC" in name:
+                print(f"[*] Strategy 3: Using Generic driver match -> {p['Name']}")
                 return p["Name"]
                 
     except Exception as e:
-        print(f"[WARN] Printer auto-detect failed: {e}")
+        print(f"[WARN] Auto-detect printer error: {e}")
         
-    # 3. Hard Coded Fallback
-    print(f"[*] Using Hard Coded Printer: {fallback}")
+    # Strategy 4: Hardcoded Fallback
+    print(f"[*] Strategy 4: Falling back to hardcoded string -> {fallback}")
     return fallback
 
 
@@ -150,13 +168,18 @@ def print_summary():
         print("[ERR] Could not fetch summary.")
         return
 
+    if not Win32Raw:
+        print("[ERR] python-escpos or pywin32 is not installed. Use Browser Print instead.")
+        return
+
     printer_name = get_best_printer()
 
     try:
         p = Win32Raw(printer_name)
         p.open()
     except Exception as e:
-        print(f"[ERR] Printer connection failed for '{printer_name}': {e}")
+        print(f"[ERR] Failed to open '{printer_name}'. Error: {e}")
+        print("      TIP: Ensure the printer is set up with 'Generic / Text Only' driver.")
         return
 
     now = datetime.now()

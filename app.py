@@ -15,7 +15,7 @@ SNAPSHOT_DIR = os.path.join(DATA_DIR, 'snapshots')
 if not os.path.exists(SNAPSHOT_DIR):
     os.makedirs(SNAPSHOT_DIR)
 
-VERSION = "1.9.1 (Transmutation Engine Refined)"
+VERSION = "1.9.2 (Printer Driver Transmutation)"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'ojt_tracker.db')}"
@@ -943,6 +943,84 @@ def calculate_transmutation():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# --- PRINTER SYSTEM (v1.9.2) ---
+
+@app.route('/api/print/thermal', methods=['POST'])
+def trigger_thermal_print():
+    """Triggers the standalone thermal printing script."""
+    import subprocess
+    try:
+        # Check if escpos is installed first
+        try:
+            import escpos
+        except ImportError:
+            return jsonify({'success': False, 'error': 'MISSING_DEPENDENCY', 'message': 'python-escpos is not installed.'})
+
+        # Run the script using the venv python if available
+        python_exe = os.path.join(BASE_DIR, 'venv', 'Scripts', 'python.exe')
+        if not os.path.exists(python_exe):
+            python_exe = 'python'
+            
+        result = subprocess.run([python_exe, 'print_time_summary.py'], capture_output=True, text=True, timeout=30)
+        if result.returncode == 0:
+            return jsonify({'success': True, 'output': result.stdout})
+        else:
+            return jsonify({'success': False, 'error': result.stderr})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/receipt')
+def render_receipt():
+    """Renders a browser-printable thermal receipt."""
+    from datetime import datetime
+    
+    settings = Settings.get_settings_obj()
+    entries = OJTEntry.query.order_by(OJTEntry.date.asc()).all()
+    
+    total_hrs = sum(e.total_hours for e in entries)
+    total_days = len(entries)
+    remaining = max(0, settings.target_hours - total_hrs)
+    
+    # Calculate monthly stats
+    monthly_stats = {}
+    for e in entries:
+        m_key = e.date.strftime('%Y-%m')
+        if m_key not in monthly_stats:
+            monthly_stats[m_key] = {'hrs': 0, 'days': 0, 'name': e.date.strftime('%b').upper(), 'month': e.date.month}
+        monthly_stats[m_key]['hrs'] += e.total_hours
+        monthly_stats[m_key]['days'] += 1
+
+    return render_template('receipt.html', 
+                           settings=settings, 
+                           entries=entries, 
+                           total_hrs=total_hrs, 
+                           total_days=total_days, 
+                           remaining=remaining,
+                           monthly_stats=monthly_stats,
+                           now=datetime.now(),
+                           version=VERSION)
+
+@app.route('/api/print/install-drivers', methods=['POST'])
+def install_printer_drivers():
+    """Installs required thermal printing dependencies."""
+    import subprocess
+    import sys
+    try:
+        python_exe = os.path.join(BASE_DIR, 'venv', 'Scripts', 'python.exe')
+        if not os.path.exists(python_exe):
+            python_exe = sys.executable
+            
+        # Install python-escpos and pywin32
+        # Using -q for quiet, but we want to see if it succeeds
+        process = subprocess.run([python_exe, '-m', 'pip', 'install', 'python-escpos', 'pywin32'], capture_output=True, text=True)
+        
+        if process.returncode == 0:
+            return jsonify({'success': True, 'output': 'Dependencies installed successfully!'})
+        else:
+            return jsonify({'success': False, 'error': process.stderr})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
     # Stealth mode for Electron: Suppress banner and logging if not in debug
