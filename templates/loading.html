@@ -37,59 +37,22 @@
     </div>
 
     <script>
-        const quotes = [
+        // v1.9.4: Compartmentalized Quote Engine
+        const fallbackQuotes = [
             "Reticulating Splines... but for Interns.",
             "Calculating how much sleep you've lost...",
-            "Avoiding the 'Black Screen of Death'...",
-            "Convincing Python that 0.001 equals zero...",
-            "Removing rose gold filters... by 💅 Support's demand.",
-            "Hiding the database from 💅 The Inquirer...",
-            "Calibrating the 'Clockwork' heart...",
-            "Polishing heatmaps until they bleed scarlet...",
-            "Downloading more RAM for the Sidecar...",
             "Consulting the Ramsey Protocol for sassy advice...",
-            "Teaching the Bat (Night Owl) how to read a clock...",
-            "Normalizing your Afternoon coffee intake...",
-            "Syncing with the Great Grandfather Clock...",
-            "Ignoring boss emails during boot sequence...",
-            "Wait, did I leave the oven on? No, just Flask.",
-            "Optimizing temporal intensity gradients...",
-            "De-bloating your productivity guilt...",
-            "Initializing the 'Vibecoding' buffer...",
-            "Ensuring your internship isn't a simulation...",
-            "Evicting Seaborn from the premises...",
-            "Installing Chart.js... it's lighter, we promise.",
-            "Drawing scarlet bars on a canvas...",
-            "Loading 4 chart views for your viewing pleasure...",
-            "Calculating your EXP bar. RANK: APPRENTICE.",
-            "Printing your proof of existence on thermal paper...",
-            "Formatting hours to H:MM so math is optional...",
-            "Consulting the RPG Intern Council...",
-            "Checking if you're GRINDING or IDLE today...",
-            "Area charts are cooler than pie charts. Fact.",
-            "Monthly breakdown loading... no spoilers.",
             "Better Late Than Never Rendering...",
-            "I'm having a 'second' thought about this internship...",
-            "Why did the intern cross the road? To get to the coffee shop.",
-            "Filing for bankruptcy? No, just filing documents for 8 hours.",
-            "Experience is what you get when you didn't get what you wanted.",
-            "Calculating the optimal path for a 15-minute bathroom break...",
-            "Wait, is it still Monday? My internal clock is lagging.",
-            "Searching for the 'Any' key to avoid working...",
-            "Compiling your resume with 90% hope and 10% actual skills...",
-            "Asking the printer to stop sensing your fear...",
-            "If time is money, I'm currently in severe debt.",
-            "The only thing more organized than this app is my excuses for being late.",
-            "A minute of filing feels like an hour of gaming.",
-            "Translating 'As per my previous email' into 'Listen here, you...'",
-            "Asking the database if it believes in life after lunch...",
-            "Calculating the probability of a surprise holiday...",
-            "Adding 'Professional Googler' to your list of skills...",
-            "Synchronizing your sighs with the office AC unit...",
-            "Warning: Intern might be running on 10% caffeine and 90% panic.",
-            "Fetching the coffee... and the will to stay until 4:30.",
-            "Time is relative, but my supervisor is absolute.",
+            "Warning: Intern might be running on 10% caffeine and 90% panic."
         ];
+
+        let quotes = [];
+        try {
+            quotes = window.__electron_ipc.getLoadingQuotes();
+            if (quotes.length === 0) quotes = fallbackQuotes;
+        } catch (e) {
+            quotes = fallbackQuotes;
+        }
 
         const phases = [
             { label: "[Phase 1] Validating Database Schema...", progress: 15 },

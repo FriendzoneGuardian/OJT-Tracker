@@ -4,10 +4,29 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import pandas as pd
 import io
+import csv
 
 # Ensure portable data storage
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
+
+def load_quotes():
+    """Load loading quotes from CSV for backend use (e.g. status bar)."""
+    csv_path = os.path.join(DATA_DIR, 'loading_quotes.csv')
+    if not os.path.exists(csv_path):
+        return ["Timing is everything."]
+    try:
+        df = pd.read_csv(csv_path)
+        return df['quote'].tolist()
+    except Exception as e:
+        # Fallback to simple csv reader if pandas fails or file is malformed
+        try:
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                return [row['quote'] for row in reader]
+        except:
+            return ["Timing is everything."]
+
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
