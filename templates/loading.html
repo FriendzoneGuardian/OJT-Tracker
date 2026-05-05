@@ -8,22 +8,10 @@
     <style>
         body { background-color: #09090b; color: #fafafa; font-family: 'Inter', sans-serif; overflow: hidden; }
         .scarlet-glow { box-shadow: 0 0 20px rgba(204, 0, 0, 0.2); }
-        .bar-animation {
-            width: 0%;
-            animation: load 3.5s ease-in-out forwards;
-        }
-        @keyframes load {
-            0%   { width: 0%; }
-            10%  { width: 8%; }
-            30%  { width: 35%; }
-            55%  { width: 62%; }
-            75%  { width: 80%; }
-            90%  { width: 88%; }
-            100% { width: 92%; } /* Hold here until real handshake */
-        }
         #bar-fill {
+            width: 0%;
             box-shadow: 0 0 8px rgba(220, 38, 38, 0.6);
-            transition: box-shadow 0.5s ease;
+            transition: width 0.6s ease-in-out, box-shadow 0.5s ease;
         }
         #bar-fill.pulse {
             box-shadow: 0 0 16px rgba(220, 38, 38, 0.9), 0 0 4px rgba(255, 80, 80, 0.5);
@@ -40,7 +28,7 @@
         <p class="text-zinc-500 text-sm mb-8 font-mono" id="phase-label">CALIBRATING TEMPORAL ENGINES...</p>
         
         <div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800 relative" id="bar-track">
-            <div class="h-full bg-red-700 bar-animation rounded-full" id="bar-fill"></div>
+            <div class="h-full bg-red-700 rounded-full" id="bar-fill"></div>
         </div>
         
         <div id="status" class="mt-4 text-xs text-zinc-600 italic transition-opacity duration-300">
@@ -69,7 +57,6 @@
             "De-bloating your productivity guilt...",
             "Initializing the 'Vibecoding' buffer...",
             "Ensuring your internship isn't a simulation...",
-            // v1.8.0 Chart Surgeon additions
             "Evicting Seaborn from the premises...",
             "Installing Chart.js... it's lighter, we promise.",
             "Drawing scarlet bars on a canvas...",
@@ -81,16 +68,36 @@
             "Checking if you're GRINDING or IDLE today...",
             "Area charts are cooler than pie charts. Fact.",
             "Monthly breakdown loading... no spoilers.",
-            "Configuring the 486-hour target. It won't cheat.",
+            "Better Late Than Never Rendering...",
+            "I'm having a 'second' thought about this internship...",
+            "Why did the intern cross the road? To get to the coffee shop.",
+            "Filing for bankruptcy? No, just filing documents for 8 hours.",
+            "Experience is what you get when you didn't get what you wanted.",
+            "Calculating the optimal path for a 15-minute bathroom break...",
+            "Wait, is it still Monday? My internal clock is lagging.",
+            "Searching for the 'Any' key to avoid working...",
+            "Compiling your resume with 90% hope and 10% actual skills...",
+            "Asking the printer to stop sensing your fear...",
+            "If time is money, I'm currently in severe debt.",
+            "The only thing more organized than this app is my excuses for being late.",
+            "A minute of filing feels like an hour of gaming.",
+            "Translating 'As per my previous email' into 'Listen here, you...'",
+            "Asking the database if it believes in life after lunch...",
+            "Calculating the probability of a surprise holiday...",
+            "Adding 'Professional Googler' to your list of skills...",
+            "Synchronizing your sighs with the office AC unit...",
+            "Warning: Intern might be running on 10% caffeine and 90% panic.",
+            "Fetching the coffee... and the will to stay until 4:30.",
+            "Time is relative, but my supervisor is absolute.",
         ];
 
         const phases = [
-            "[Phase 1] Validating Database Schema...",
-            "[Phase 2] Running Clockwork Migrations...",
-            "[Phase 3] Preserving Temporal Archives...",
-            "[Phase 4] Synchronizing Holidays...",
-            "[Phase 5] Loading Chart.js Canvas...",
-            "[Phase 6] Warmup Complete. Awaiting Handshake...",
+            { label: "[Phase 1] Validating Database Schema...", progress: 15 },
+            { label: "[Phase 2] Running Clockwork Migrations...", progress: 30 },
+            { label: "[Phase 3] Preserving Temporal Archives...", progress: 50 },
+            { label: "[Phase 4] Synchronizing Holidays...", progress: 70 },
+            { label: "[Phase 5] Loading Chart.js Canvas...", progress: 85 },
+            { label: "[Phase 6] Warmup Complete. Awaiting Handshake...", progress: 95 },
         ];
 
         const statusEl = document.getElementById('status');
@@ -100,28 +107,37 @@
         let phaseIdx = 0;
         const phaseInterval = setInterval(() => {
             if (phaseIdx < phases.length) {
+                const phase = phases[phaseIdx++];
                 phaseEl.style.opacity = 0;
                 setTimeout(() => {
-                    phaseEl.textContent = phases[phaseIdx++];
+                    phaseEl.textContent = phase.label;
+                    barFill.style.width = phase.progress + '%';
                     phaseEl.style.opacity = 1;
                 }, 200);
             } else {
                 clearInterval(phaseInterval);
-                // Pulse the bar when done
                 barFill.classList.add('pulse');
             }
-        }, 700);
+        }, 800);
         
+        let recentQuotes = [];
         function rotateQuote() {
             statusEl.style.opacity = 0;
             setTimeout(() => {
-                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                let availableQuotes = quotes.filter(q => !recentQuotes.includes(q));
+                const randomQuote = availableQuotes[Math.floor(Math.random() * availableQuotes.length)];
+                
                 statusEl.textContent = `"${randomQuote}" — The Shell`;
                 statusEl.style.opacity = 1;
+
+                recentQuotes.push(randomQuote);
+                if (recentQuotes.length > 5) {
+                    recentQuotes.shift(); // Maintain 5-message cooldown
+                }
             }, 300);
         }
 
-        setInterval(rotateQuote, 1800);
+        setInterval(rotateQuote, 5000);
         // Initial random start
         rotateQuote();
     </script>
