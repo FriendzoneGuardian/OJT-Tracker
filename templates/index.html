@@ -10,7 +10,9 @@
     <style>
         .amoled { --bg-color: #000000; --card-bg: #0a0a0a; }
         .tab-able:focus { border-color: #dc2626; outline: 2px solid transparent; outline-offset: 2px; --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color); --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) #dc2626; box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000); }
-        .modal-box { position: relative; z-index: 100; }
+        .modal-box { position: relative; z-index: 10001; }
+        .modal-overlay { z-index: 10000 !important; }
+        .update-overlay { z-index: 20000 !important; }
         
         /* Readability Hotfix for Dark/AMOLED Dropdowns & Selects */
         .dark select option, .amoled select option {
@@ -239,7 +241,7 @@
     </script>
 
     <!-- Settings Modal (Cleaned up) -->
-    <div id="settings-modal" onclick="if(event.target === this) toggleSettings(false)" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div id="settings-modal" onclick="if(event.target === this) toggleSettings(false)" class="hidden fixed inset-0 modal-overlay flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 modal-box">
             <div class="p-8">
                 <div class="flex justify-between items-center mb-6">
@@ -316,7 +318,7 @@
     </div>
 
     <!-- Import Modal -->
-    <div id="import-modal" onclick="if(event.target === this) toggleImport(false)" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div id="import-modal" onclick="if(event.target === this) toggleImport(false)" class="hidden fixed inset-0 modal-overlay flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 modal-box">
             <div class="p-8 text-center">
                 <div class="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -342,7 +344,7 @@
     </div>
 
     <!-- Calendar Modal (Dedicated, Large, Resized) -->
-    <div id="calendar-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div id="calendar-modal" class="hidden fixed inset-0 modal-overlay flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-zinc-900 w-[70%] h-[70%] min-w-[900px] min-h-[600px] rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 modal-box">
             <div class="flex h-full">
                 <!-- Left Section: Add New -->
@@ -416,7 +418,7 @@
     </div>
 
     <!-- Entry Modal -->
-    <div id="entry-modal" onclick="if(event.target === this) toggleModal(false)" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div id="entry-modal" onclick="if(event.target === this) toggleModal(false)" class="hidden fixed inset-0 modal-overlay flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 modal-box">
             <div class="p-8">
                 <div class="flex justify-between items-center mb-6">
@@ -477,7 +479,7 @@
     </div>
 
     <!-- Transmute Modal -->
-    <div id="transmute-modal" onclick="if(event.target === this) toggleTransmuteModal(false)" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div id="transmute-modal" onclick="if(event.target === this) toggleTransmuteModal(false)" class="hidden fixed inset-0 modal-overlay flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 modal-box">
             <div class="p-8 text-center">
                 <div class="w-16 h-16 bg-scarlet-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -1385,6 +1387,7 @@
         async function applyUpdate() {
             document.getElementById('update-btn').disabled = true;
             document.getElementById('update-modal').classList.remove('hidden');
+            lucide.createIcons(); // Ensure the X icon shows up
             const logEl = document.getElementById('update-log');
             logEl.innerHTML = '<div class="text-zinc-500">Starting update...</div>';
 
@@ -1407,8 +1410,11 @@
     </script>
 
     <!-- Update Progress Modal -->
-    <div id="update-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-        <div class="bg-zinc-900 w-full max-w-lg rounded-3xl shadow-2xl p-8">
+    <div id="update-modal" class="hidden fixed inset-0 update-overlay flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="bg-zinc-900 w-full max-w-lg rounded-3xl shadow-2xl p-8 relative">
+            <button onclick="document.getElementById('update-modal').classList.add('hidden')" class="absolute top-6 right-6 p-2 hover:bg-white/10 rounded-xl transition-colors text-zinc-500 hover:text-white">
+                <i data-lucide="x"></i>
+            </button>
             <h3 class="text-xl font-bold mb-4">🔄 Applying Update...</h3>
             <div id="update-log" class="font-mono text-xs text-zinc-400 bg-black/40 rounded-xl p-4 max-h-64 overflow-y-auto space-y-1"></div>
             <p id="update-done-msg" class="hidden mt-4 text-sm text-green-400 font-bold">
