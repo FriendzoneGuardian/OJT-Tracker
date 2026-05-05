@@ -15,7 +15,7 @@ except ImportError:
 # ─── CONFIG ────────────────────────────────────────
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "ojt_tracker.db")
 TARGET_HOURS = 486.0  # Default; overridden by DB settings if available
-VERSION = "1.9.2"
+VERSION = "1.9.4"
 LINE = "-" * 42
 
 

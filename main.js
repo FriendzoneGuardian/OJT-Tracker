@@ -10,7 +10,7 @@ function createWindow() {
         width: 1400,
         height: 900,
         backgroundColor: '#09090b', // zinc-950 matching the UI
-        title: 'OJT-Tracker v1.9.1',
+        title: 'OJT-Tracker v1.9.4',
         icon: path.join(__dirname, 'static/favicon.ico'),
         show: false, // Don't show until ready-to-show to prevent white flicker
         webPreferences: {
