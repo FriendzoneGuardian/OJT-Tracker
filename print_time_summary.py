@@ -177,6 +177,22 @@ def print_summary():
     try:
         p = Win32Raw(printer_name)
         p.open()
+        
+        # ─── DRAWER KICK (v1.9.3 Fun/Debug) ───────────
+        # Trying a "Universal" blast of kick codes
+        try:
+            print("[*] Debug: Kicking drawer (Universal Blast)...")
+            # 1. Epson/Bixolon Standard (Pin 2 & 5)
+            p._raw(b'\x1b\x70\x00\x19\xfa')
+            p._raw(b'\x1b\x70\x01\x19\xfa')
+            # 2. Real-time Status kick (DLE DC4)
+            p._raw(b'\x10\x14\x01\x00\x00')
+            # 3. Star Micronics / Alternate Bixolon
+            p._raw(b'\x1b\x07\x0b\x32\x0a') # ESC BEL
+            p._raw(b'\x07')                 # BEL
+        except Exception as e:
+            print(f"[!] Kick failed: {e}")
+            
     except Exception as e:
         print(f"[ERR] Failed to open '{printer_name}'. Error: {e}")
         print("      TIP: Ensure the printer is set up with 'Generic / Text Only' driver.")

@@ -42,6 +42,7 @@ Any instance of late arrival or early departure (undertime) is penalized in 15-m
   "afternoon_start": "13:00",
   "afternoon_end": "16:00",
   "penalty_per_15_mins_minutes": 60,
-  "fixed_daily_deduction_minutes": 30
+  "fixed_daily_deduction_minutes": 30,
+  "include_saturday": true
 }
 ```

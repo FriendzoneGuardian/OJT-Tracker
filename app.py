@@ -858,7 +858,21 @@ def import_ruleset():
         with open(ruleset_path, 'w', encoding='utf-8') as f:
             f.write(ruleset_json)
             
-        return jsonify({'success': True, 'message': 'Ruleset imported successfully.', 'data': ruleset_data})
+        # Optional: Auto-configure workspace settings based on ruleset (e.g. Saturday work)
+        settings = Settings.get_settings_obj()
+        updated_settings = False
+        
+        if ruleset_data.get('include_saturday') is True:
+            settings.include_saturday = True
+            updated_settings = True
+        if ruleset_data.get('include_sunday') is True:
+            settings.include_sunday = True
+            updated_settings = True
+            
+        if updated_settings:
+            db.session.commit()
+            
+        return jsonify({'success': True, 'message': 'Ruleset imported and settings adjusted.', 'data': ruleset_data})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
