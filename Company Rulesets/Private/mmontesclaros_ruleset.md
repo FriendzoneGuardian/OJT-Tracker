@@ -37,10 +37,10 @@ Any instance of late arrival or early departure (undertime) is penalized in 15-m
 ```json
 {
   "grace_period_minutes": 15,
-  "morning_start": "08:00",
+  "morning_start": "07:30",
   "morning_end": "12:00",
   "afternoon_start": "13:00",
-  "afternoon_end": "16:00",
+  "afternoon_end": "16:30",
   "penalty_per_15_mins_minutes": 60,
   "fixed_daily_deduction_minutes": 0,
   "include_saturday": true

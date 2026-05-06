@@ -5,12 +5,22 @@ const { spawn } = require('child_process');
 let mainWindow;
 let flaskProcess;
 
+// v1.10: Dev Superpowers - Hot Reloading
+const isDev = process.argv.includes('--dev');
+if (isDev) {
+    try {
+        require('electron-reloader')(module);
+    } catch (_) {}
+}
+
+
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 1400,
+        width: isDev ? 1800 : 1400, // v1.10: Expand for DevTools
         height: 900,
         backgroundColor: '#09090b', // zinc-950 matching the UI
-        title: 'OJT-Tracker v1.9.4',
+        title: `OJT-Tracker v1.9.4 ${isDev ? '[DEV MODE]' : ''}`,
+
         icon: path.join(__dirname, 'static/favicon.ico'),
         show: false, // Don't show until ready-to-show to prevent white flicker
         webPreferences: {
@@ -25,7 +35,11 @@ function createWindow() {
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
+        if (isDev) {
+            mainWindow.webContents.openDevTools();
+        }
     });
+
 
     // v1.3.2/v1.6.1: Robust Reload Logic
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
@@ -41,7 +55,13 @@ function createWindow() {
     mainWindow.on('closed', function () {
         mainWindow = null;
     });
+
+    // v1.10: Production Hardening
+    if (!isDev) {
+        mainWindow.setMenuBarVisibility(false);
+    }
 }
+
 
 function startFlask() {
     // Reveal window immediately with loading screen
@@ -76,11 +96,15 @@ function startFlask() {
         }
     }
 
-    const scriptPath = process.env.NODE_ENV === 'production' ? '' : path.join(__dirname, 'app.py');
+    const scriptPath = (process.env.NODE_ENV === 'production' || !isDev) ? '' : path.join(__dirname, 'app.py');
 
     const args = scriptPath ? [scriptPath] : [];
+    if (isDev && scriptPath) {
+        args.push('--debug'); // v1.10: Pass debug flag to Flask
+    }
     
     flaskProcess = spawn(pythonPath, args, {
+
         cwd: __dirname,
         env: { ...process.env, FLASK_ENV: 'production' }
     });

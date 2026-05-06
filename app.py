@@ -1056,9 +1056,17 @@ def install_printer_drivers():
         return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
-    # Stealth mode for Electron: Suppress banner and logging if not in debug
-    import logging
-    log = logging.getLogger('werkzeug')
-    log.setLevel(logging.ERROR)
+    import sys
+    # v1.10: Handle Dev Superpowers from Electron
+    is_debug = '--debug' in sys.argv
+    
+    if not is_debug:
+        # Stealth mode for Electron: Suppress banner and logging if not in debug
+        import logging
+        log = logging.getLogger('werkzeug')
+        log.setLevel(logging.ERROR)
+    else:
+        print("[BACKEND] 🚀 DEV MODE: Flask Debugging Enabled")
         
-    app.run(host='127.0.0.1', port=8080, debug=False)
+    app.run(host='127.0.0.1', port=8080, debug=is_debug)
+

@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <style>
         body { background-color: #09090b; color: #fafafa; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .scarlet-glow { box-shadow: 0 0 20px rgba(204, 0, 0, 0.2); }
+        .forest-glow { box-shadow: 0 0 20px rgba(22, 163, 74, 0.2); }
         #bar-fill {
             width: 0%;
-            box-shadow: 0 0 8px rgba(220, 38, 38, 0.6);
+            box-shadow: 0 0 8px rgba(22, 163, 74, 0.6);
             transition: width 0.6s ease-in-out, box-shadow 0.5s ease;
         }
         #bar-fill.pulse {
-            box-shadow: 0 0 16px rgba(220, 38, 38, 0.9), 0 0 4px rgba(255, 80, 80, 0.5);
+            box-shadow: 0 0 16px rgba(22, 163, 74, 0.9), 0 0 4px rgba(34, 197, 94, 0.5);
         }
         #phase-label {
             transition: opacity 0.4s ease;
@@ -28,7 +28,7 @@
         <p class="text-zinc-500 text-sm mb-8 font-mono" id="phase-label">CALIBRATING TEMPORAL ENGINES...</p>
         
         <div class="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800 relative" id="bar-track">
-            <div class="h-full bg-red-700 rounded-full" id="bar-fill"></div>
+            <div class="h-full bg-forest-600 rounded-full" id="bar-fill"></div>
         </div>
         
         <div id="status" class="mt-4 text-xs text-zinc-600 italic transition-opacity duration-300">
