@@ -1066,7 +1066,7 @@ if __name__ == '__main__':
         log = logging.getLogger('werkzeug')
         log.setLevel(logging.ERROR)
     else:
-        print("[BACKEND] 🚀 DEV MODE: Flask Debugging Enabled")
+        print("[BACKEND] [DEV] DEV MODE: Flask Debugging Enabled")
         
     app.run(host='127.0.0.1', port=8080, debug=is_debug)
 

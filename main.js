@@ -96,7 +96,8 @@ function startFlask() {
         }
     }
 
-    const scriptPath = (process.env.NODE_ENV === 'production' || !isDev) ? '' : path.join(__dirname, 'app.py');
+    // v1.10.1 Fix: Only omit app.py if we are running the compiled dist/app.exe
+    const scriptPath = (pythonPath.endsWith('app.exe')) ? '' : path.join(__dirname, 'app.py');
 
     const args = scriptPath ? [scriptPath] : [];
     if (isDev && scriptPath) {
