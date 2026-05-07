@@ -4,7 +4,8 @@
   "morning_end": "12:00",
   "afternoon_start": "13:00",
   "afternoon_end": "16:30",
-  "penalty_per_15_mins_minutes": 60,
+  "penalty_per_15_mins_minutes": 0,
+  "fixed_late_penalty_minutes": 60,
   "fixed_daily_deduction_minutes": 0,
   "include_saturday": true
 }

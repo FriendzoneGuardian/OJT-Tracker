@@ -951,6 +951,7 @@ def calculate_transmutation():
             # Start with fixed daily deduction (Snack Breaks / Downtime)
             day_penalty = fixed_daily
             
+            # 1. Tiered penalties (Old "Adding Lates" system)
             for diff in diffs:
                 if diff > grace:
                     if penalty_rate > 0:
@@ -965,6 +966,16 @@ def calculate_transmutation():
                         for r in ruleset.get('undertime_penalties', []):
                             if r['min'] <= diff <= r['max']:
                                 day_penalty += r['deduct_minutes']
+            
+            # 2. Official Late Rule (New Flat Penalty)
+            fixed_late = ruleset.get('fixed_late_penalty_minutes', 0)
+            if fixed_late > 0:
+                # Check Morning Late
+                if m_in and m_start and m_in > (m_start + grace):
+                    day_penalty += fixed_late
+                # Check Afternoon Late
+                if a_in and a_start and a_in > (a_start + grace):
+                    day_penalty += fixed_late
             
             total_deductions_mins += day_penalty
                 

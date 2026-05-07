@@ -313,9 +313,19 @@ def print_summary():
                 if cur_a_out and a_end and cur_a_out < a_end: diffs.append(a_end - cur_a_out)
 
                 day_penalty = fixed_daily
+                fixed_late = ruleset.get('fixed_late_penalty_minutes', 0)
+
+                # 1. Tiered penalties (Old "Adding Lates")
                 for diff in diffs:
                     if diff > grace and penalty_rate > 0:
                         day_penalty += ((diff + 14) // 15) * penalty_rate
+                
+                # 2. Official Late Rule (New Flat Penalty)
+                if fixed_late > 0:
+                    if cur_m_in and m_start and cur_m_in > (m_start + grace):
+                        day_penalty += fixed_late
+                    if cur_a_in and a_start and cur_a_in > (a_start + grace):
+                        day_penalty += fixed_late
                 
                 if day_penalty > 0:
                     d_str = f"{day_penalty/60.0:.1f}h"
@@ -368,10 +378,21 @@ def print_summary():
                 if a_out and a_end and a_out < a_end: diffs.append(a_end - a_out)
 
                 day_penalty = fixed_daily
+                fixed_late = ruleset.get('fixed_late_penalty_minutes', 0)
+
+                # 1. Tiered penalties
                 for diff in diffs:
                     if diff > grace and penalty_rate > 0:
                         units = (diff + 14) // 15
                         day_penalty += units * penalty_rate
+                
+                # 2. Official Late Rule
+                if fixed_late > 0:
+                    if m_in and m_start and m_in > (m_start + grace):
+                        day_penalty += fixed_late
+                    if a_in and a_start and a_in > (a_start + grace):
+                        day_penalty += fixed_late
+
                 total_deduct_mins += day_penalty
 
             deduct_hrs = total_deduct_mins / 60.0
@@ -398,6 +419,21 @@ def print_summary():
         p.text(">>> PROGRESS SUMMARY <<<\n")
         p.set(align="left", bold=False)
         p.text(f"  EXP: {data['pct']:.1f}% COMPLETE\n")
+        
+        # Rank Logic (Academe / Bookworm Hybrid)
+        pct = data['pct']
+        rank = "ENROLLEE"
+        if pct >= 100: rank = "SUMMA OJT"
+        elif pct >= 95: rank = "SCHOLAR"
+        elif pct >= 85: rank = "DEGREE CANDIDATE"
+        elif pct >= 75: rank = "RESEARCH ASST."
+        elif pct >= 60: rank = "THESIS WRITER"
+        elif pct >= 45: rank = "SENIOR INTERN"
+        elif pct >= 30: rank = "JUNIOR INTERN"
+        elif pct >= 20: rank = "SOPHOMORE"
+        elif pct >= 10: rank = "FRESHMAN"
+        
+        p.text(f"  RANK: {rank}\n")
         p.text(LINE + "\n")
 
     # ─── FOOTER ───────────────────────────────────

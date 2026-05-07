@@ -114,14 +114,26 @@
     <div class="footer">
         <div class="bold">>>> LEVEL SUMMARY <<<</div>
         {% set pct = (total_hrs / settings.target_hours * 100) if settings.target_hours > 0 else 0 %}
-        {% if pct < 25 %}
-            <div>Rank: NOVICE</div>
-        {% elif pct < 50 %}
-            <div>Rank: JUNIOR</div>
+        {% if pct < 10 %}
+            <div>Rank: ENROLLEE</div>
+        {% elif pct < 20 %}
+            <div>Rank: FRESHMAN</div>
+        {% elif pct < 30 %}
+            <div>Rank: SOPHOMORE</div>
+        {% elif pct < 45 %}
+            <div>Rank: JUNIOR INTERN</div>
+        {% elif pct < 60 %}
+            <div>Rank: SENIOR INTERN</div>
         {% elif pct < 75 %}
-            <div>Rank: SENIOR</div>
+            <div>Rank: THESIS WRITER</div>
+        {% elif pct < 85 %}
+            <div>Rank: RESEARCH ASST.</div>
+        {% elif pct < 95 %}
+            <div>Rank: DEGREE CANDIDATE</div>
+        {% elif pct < 100 %}
+            <div>Rank: SCHOLAR</div>
         {% else %}
-            <div>Rank: MASTER</div>
+            <div>Rank: SUMMA OJT</div>
         {% endif %}
         <div>Status: {{ 'GRINDING' if total_hrs > 0 else 'IDLE' }}</div>
         <div>Progress: {{ "%.1f"|format(pct) }}%</div>
